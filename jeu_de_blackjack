@@ -1,0 +1,61 @@
+"""
+Ce jeu permet de jouer au Black Jack:
+    - seul, en multijoueur ou avec des IA
+    - avec des mises
+"""
+
+def tirer():
+    """
+    Distribue une carte au joueur, 
+    puis lui propose jusqu'à ce que celui-ci atteigne 21 de tirer une carte ou de rester
+    """
+    pass
+
+
+def abandonner():
+    """
+    Le joueur réccupère la moitié de sa mise et perd sa main (comme s'il avait dépassé 21)
+    """
+    pass
+
+
+def split():
+    """
+    sépare la main du joueur en deux mains et distribue une carte par main
+    """
+    pass
+
+
+# Paramétrage du nombre de joueurs et d'IA
+# Initialisation intermace graphique
+# Initialisation des mises (au choix des joueurs)
+
+# Boucle while des manches :
+
+    # Distribution des cartes
+
+    # Boucle des joueurs :
+
+        # Le joueur ou l'IA fait un seul choix :
+            # Tirer
+            # Rester (pas de fonction associée au bouton car rien à faire)
+            # Abandonner
+            # split (uniquement possible si le joueur possède une paire)
+
+        # Mise à jour de la mise
+        # Mise à jour de la main
+        # La main perd s'il dépasse 21
+
+
+    # Boucle du croupier tq main_croupier < 17 :
+        # Le croupier tire une carte
+
+    # Le croupier perd face aux joueurs restants s'il a plus de 21
+
+    # Boucle des résultats (une itération par joueur restant) :
+
+        # Si main_croupier > main_joueur :
+            # Croupier réccupère la mise du joueur
+
+        # Sinon :
+             # le joueur réccupère 2 fois sa mise
