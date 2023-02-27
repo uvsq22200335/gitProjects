@@ -1,1 +1,29 @@
+# Paramétrage du nombre de joueurs et d'IA
+# Initialisation intermace graphique
+# Initialisation des mises (au choix des joueurs)
 
+# Boucle while des manches :
+
+    # Distribution des cartes
+
+    # Boucle des joueurs :
+
+        # Boucle while du joueur :
+            # Le joueur ou l'IA fait un choix
+            # Mise à jour de la mise
+            # Mise à jour de la main
+            # La main perd s'il dépasse 21
+
+    
+    # Boucle du croupier tq main_croupier < 17 :
+        # Le croupier tire une carte
+
+    # Le croupier perd face aux joueurs restants s'il a plus de 21
+
+    # Boucle des résultats (une itération par joueur restant) :
+
+        # Si main_croupier > main_joueur :
+            # Croupier réccupère la mise du joueur
+
+        # Sinon :
+             # le joueur réccupère 2 fois sa mise
