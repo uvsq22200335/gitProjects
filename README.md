@@ -41,7 +41,18 @@ Dès qu’un joueur fait plus de 21, on dit qu’il « brûle » (« burst ») e
 Quant au croupier, une fois tous les joueurs servis, il joue pour son compte selon une règle universelle : « la banque tire à 16, reste à 17 ». Ainsi, le croupier tire des cartes jusqu'à atteindre un nombre supérieur ou égal à 179 (cf. Service du Croupier)
 </div>
  
-Le focntionnement détaillé du programme est accessible dans le fichier  
+Le fonctionnement détaillé du programme est accessible, ci-dessous les étapes principales de construction (en mode 1V1)  
+ - construire une grande pioche 
+ - construire la main du croupier
+ - coder la distribution des cartes (deal)
+ 
+ - coder la stratégie du croupier
+ - calculer le total de chaque main des joueurs
+ - coder une fonction qui determine qui du joueur solo ou du croupier a gagné la manche 
+ - construire une boucle qui implémente chacune de ses fonctions dans le jeu
+
+ Déroulement de l'algorithme : 
+ 
 
 
 
