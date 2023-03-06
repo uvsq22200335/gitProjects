@@ -6,12 +6,16 @@ Ce jeu permet de jouer au Black Jack:
 le dictionnaire joueurs est de la forme:
 
 {
-    'joueur': nom du joueur (str),
-    'intelligence: 'humaine' ou 'artificielle',
-    'main': [{'valeur': valeur de la carte (str), 'couleur': couleur de la carte (str)}, ...],
-    'richesse': richesse actuelle, dont on a déjà déduit la mise (int)
-    'mise': mise actuelle (int)
+nom du premier joueur :{
+                        'intelligence: 'humaine' ou 'artificielle',
+                        'main': [{'valeur': valeur de la carte (str), 'couleur': couleur de la carte (str)}, ...],
+                        'richesse': richesse actuelle, dont on a déjà déduit la mise (int)
+                        'mise': mise actuelle (int)
+                        },
+
+nom du deuxième joueur:...
 }
+
 
 croupier est de la forme: [{'valeur': valeur de la carte, 'couleur': couleur de la carte}, ...]
 """
@@ -96,7 +100,15 @@ def tirer(main: list):
     del sabot[-1]
 
 
-def affichage(joueur: dict()):
+def victoire(joueur : str):
+    """ Fait récupérer sa mise à joueur et l'en informe """
+    global joueurs
+    print('\n', joueur, 'a récupère deux fois sa mise')
+    joueurs[joueur]['richesse'] += 2 * joueurs[joueur]['mise']
+    joueurs[joueur]['mise'] = 0
+
+
+def affichage(joueur: dict):
     """ affiche clairement la situation de joueur """
     global joueurs
     print('\n' + joueur + ": ", "\n")
@@ -165,11 +177,7 @@ def distribution():
         for joueur in joueurs.keys():
             tirer(joueurs[joueur]['main'])
 
-        if repet == 0:
-            tirer(croupier)
-
-        else:
-            tirer(croupier)
+        tirer(croupier)
 
 
 def mise_artificielle(joueur: str):
@@ -223,6 +231,7 @@ def black_jack():
     global joueurs, croupier
     if detect_black_jack(croupier):
         print('\n', "le croupier a réalisé un black jack:", croupier)
+
         for joueur in joueurs:
 
             if detect_black_jack(joueurs[joueur]['main']):
@@ -237,7 +246,11 @@ def black_jack():
             joueurs[joueur]['mise'] = 0
             joueurs[joueur]['main'] = []
 
+        croupier = []
+
     else:
+        nb_black_jack = 0
+        # la variable nb_black_jack sert à détecter le cas où tous les joueurs ont black jack
         for joueur in joueurs:
             if detect_black_jack(joueurs[joueur]['main']):
                 print('\n', "contrairement au croupier,", joueur,
@@ -246,6 +259,10 @@ def black_jack():
                 joueurs[joueur]['richesse'] += (3*joueurs[joueur]['mise'] + joueurs[joueur]['mise'] % 10) // 2
                 joueurs[joueur]['mise'] = 0
                 joueurs[joueur]['main'] = []
+                nb_black_jack += 1
+        
+        if nb_black_jack == len(joueurs):
+            croupier = []
 
 
 def explosion_joueur(joueur: str):
@@ -332,6 +349,23 @@ def doubler(joueur: str):
     explosion_joueur(joueur)
 
 
+def tour_croupier():
+    """Fait tirer le croupier jusqu'à ce qu'il etteigne 17"""
+    global sabot, croupier, joueurs
+    print('\n', "Cartes du croupier:", croupier)
+    while score(croupier)['min'] < 16:
+        croupier.append(sabot[-1])
+        del sabot[-1]
+        print('\n', "Cartes du croupier:", croupier)
+
+    if score(croupier)['max'] > 21:
+        liste_gagnants = [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0]
+        print("Le croupier a dépassé 21, il perd donc face à tous les joueurs restants")
+
+        for joueur in liste_gagnants:
+            victoire(joueur)
+
+
 def eliminations():
     """Elimine joueur et l'annonce si celui-ci n'a plus de richesse"""
     global joueurs
@@ -343,15 +377,8 @@ def eliminations():
             del joueurs[joueur]
 
 
-def tirage_croupier():
-    """Fait tirer le croupier jusqu'à ce qu'il etteigne 17"""
-    global sabot, croupier
-    while score(croupier)['min'] < 16:
-        croupier.append(sabot[-1])
-        del sabot[-1]
-
-
 # Paramétrage du croupier, des joueurs et des IA
+croupier = []
 print()
 nb_joueurs = choix_nb_joueurs()
 joueurs = creation_joueurs()
@@ -380,54 +407,51 @@ while continuer == 'oui':
     # Black Jack
     black_jack()
 
-    # Boucle des joueurs
-    for joueur in joueurs.keys():
+    if croupier != []:
 
-        # Si ni le croupier, ni le joueur n'a fait Black Jack, le joueur fait un seul choix:
-            # Tirer
-            # Abandonner
-            # Doubler
-            # split (uniquement possible si le joueur possède une paire)
-            # Rester (pas de fonction associée au bouton car rien à faire)
+        # Boucle des joueurs
+        for joueur in joueurs.keys():
 
-        if joueurs[joueur]['mise'] == 0:
-            pass
+            # Si ni le croupier, ni le joueur n'a fait Black Jack, le joueur fait un seul choix:
+                # Tirer
+                # Abandonner
+                # Doubler
+                # split (uniquement possible si le joueur possède une paire)
+                # Rester (pas de fonction associée au bouton car rien à faire)
 
-        elif joueurs[joueur]['intelligence'] == 'humaine':
-            print('\n', 'Carte croupier:', croupier[0])
-            affichage(joueur)
-            action = choix_action(joueur)
+            if joueurs[joueur]['mise'] == 0:
+                pass
 
-            if action == 'tirer':
-                choix_tirer(joueur)
+            elif joueurs[joueur]['intelligence'] == 'humaine':
+                print('\n', 'Carte croupier:', croupier[0])
+                affichage(joueur)
+                action = choix_action(joueur)
 
-            elif action == 'abandonner':
-                abandonner(joueur)
+                if action == 'tirer':
+                    choix_tirer(joueur)
 
-            elif action == 'doubler':
-                doubler(joueur)
+                elif action == 'abandonner':
+                    abandonner(joueur)
 
-            elif action == 'split':
-                split(joueur)
+                elif action == 'doubler':
+                    doubler(joueur)
 
-        else:
-            continue
+                elif action == 'split':
+                    split(joueur)
 
-    # Boucle du croupier tq main_croupier < 17:
-        # Le croupier tire une carte
+            else:
+                continue
 
-    tirage_croupier()
-    print(croupier)
+        # Le croupier tire ses cartes et perd s'il a plus de 21
+        tour_croupier()
 
-    # Le croupier perd face aux joueurs restants s'il a plus de 21
+        # Boucle des résultats (une itération par joueur restant):
 
-    # Boucle des résultats (une itération par joueur restant):
+            # Si main_croupier > main_joueur:
+                # Croupier réccupère la mise du joueur
 
-        # Si main_croupier > main_joueur:
-            # Croupier réccupère la mise du joueur
-
-        # Sinon:
-            # le joueur réccupère 2 fois sa mise
+            # Sinon:
+                # le joueur réccupère 2 fois sa mise
 
     # les joueurs à richesse nulle sont éliminés de la partie
     eliminations()
