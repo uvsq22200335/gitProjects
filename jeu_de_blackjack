@@ -2,60 +2,427 @@
 Ce jeu permet de jouer au Black Jack:
     - seul, en multijoueur ou avec des IA
     - avec des mises
+
+le dictionnaire joueurs est de la forme:
+
+{
+    'joueur': nom du joueur (str),
+    'intelligence: 'humaine' ou 'artificielle',
+    'main': [{'valeur': valeur de la carte (str), 'couleur': couleur de la carte (str)}, ...],
+    'richesse': richesse actuelle, dont on a déjà déduit la mise (int)
+    'mise': mise actuelle (int)
+}
+
+croupier est de la forme: [{'valeur': valeur de la carte, 'couleur': couleur de la carte}, ...]
 """
 
-def tirer():
+import random as rd
+
+
+def creation_sabot():
+    """ retourne une liste contenant toutes les cartes du sabot mélangées """
+    valeurs = [str(i) for i in range(1, 11)] + ['J', 'Q', 'K']
+    couleurs = ['pique', 'coeur', 'carreau', 'trefle']
+    sabot = 6 * [{'valeur': valeur, 'couleur': couleur} for couleur in couleurs for valeur in valeurs]
+    rd.shuffle(sabot)
+    return sabot
+
+
+def score(main: list):
     """
-    Distribue une carte au joueur, 
+    calcule la valeur totale d'une main et renoie [vmin, vmax]
+    (deux éléments car valeur dépend des AS et 2 valeurs idéales possibles selon le contexte)
+    """
+    AS = 0
+    total = 0
+    for carte in main:
+        if carte['valeur'] in ['10', 'J', 'Q', 'K']:
+            total += 10
+
+        elif carte['valeur'] == '1':
+            AS += 1
+
+        else:
+            total += int(carte['valeur'])
+
+    total_min = total + AS
+
+    if AS == 0:
+        total_max = total
+    else:
+        total_max = total + 11 * AS - AS + 1
+
+    return {'mini': total_min, 'maxi': total_max}
+
+
+def detect_black_jack(main: list):
+    """
+    Vérifie pour tous les joueurs s'ils ont Black Jack,
+    auquel cas ceux-ci réccupèrent 3/2 fois leur mise
+    """
+    return ((main[0]['valeur'] in ['10', 'J', 'Q', 'K'] and main[1]['valeur'] == '1')
+            or (main[1]['valeur'] in ['10', 'J', 'Q', 'K'] and main[0]['valeur'] == '1'))
+
+
+def choix(texte: str, alternatives: list):
+    """
+    Remplace les boutons en attendant une interface graphique,
+    permet de simuler la sélection d'un bouton
+    """
+    action = input('\n' + texte)
+    while action not in alternatives:
+
+        action = input('\n' + texte)
+
+    return action
+
+
+def entree_valeur(texte: str):
+    """
+    Remplace temporairement la sélection de valeurs
+    par jetons en attendant l'interface graphique
+    """
+    valeur = 1
+    while valeur % 5 != 0 or valeur <= 0:
+        valeur = int(input('\n' + texte))
+
+    return valeur
+
+
+def tirer(main: list):
+    """ Fait tirer une carte à la main """
+    global sabot, joueurs
+    main.append(sabot[0])
+    del sabot[0]
+
+
+def affichage(joueur: dict()):
+    """ affiche clairement la situation de joueur """
+    global joueurs
+    print('\n' + joueur + ": ", "\n")
+    for cle in joueurs[joueur].keys():
+        print(cle, joueurs[joueur][cle])
+
+
+def choix_nb_joueurs():
+    """ retourne le nombre de joueurs demandé par l'utilisateur """
+    nombre_de_joueurs = int(input("Indiquez le nombre de joueurs désiré (IA + joueurs réels) "))
+    while not 0 < nombre_de_joueurs <= 7:
+        nombre_de_joueurs = int(input("Indiquez le nombre de joueurs désiré (IA + joueurs réels) "))
+
+    return nombre_de_joueurs
+
+
+def creation_joueurs():
+    """ Fait entrer leurs noms aux utilisateurs """
+    joueurs = {}
+    i = 0
+    while i < nb_joueurs:
+        joueur = str(input('\n' + 'Nom du nouveau joueur (si fin des joueurs ne rien écrire): '))
+
+        if joueur == "":
+            i = nb_joueurs
+
+        elif joueur not in joueurs.keys():
+            joueurs[joueur] = {'intelligence': 'humaine', 'main': []}
+            i += 1
+
+    return joueurs
+
+
+def creation_IA():
+    """ Complète la liste de joueurs avec des IA pour qu'il y ait la bon nombre de joueurs """
+    global joueurs, nb_joueurs
+    for nom_IA in ['René', 'Gisèle', 'Elisa', 'Juliette', 'Eloa', 'Maïmouna', 'Raphaël',
+                   'Roman', 'Quentin', 'Kévin', 'Anne', 'Félix', 'Sylvie', 'Jeanne']:
+        if not(nom_IA in joueurs.keys()) and len(joueurs) < nb_joueurs:
+            joueurs[nom_IA] = {'intelligence': 'artificielle', 'main': []}
+
+
+def initialisation_richesses():
+    """ Demande la richesse de départ à l'utilisateur, puis l'assigne à chaque joueur """
+    global joueurs
+    richesse_initiale = entree_valeur("Richesse initiale? ")
+    for joueur in joueurs.keys():
+        joueurs[joueur]['richesse'] = richesse_initiale
+
+
+def initialisation_mains():
+    """ associe une main vide à chaque joueur """
+    global croupier, joueurs
+    croupier = []
+    for joueur in joueurs.keys():
+        joueurs[joueur]['main'] = []
+
+
+def distribution():
+    """
+    distribue les cartes aux joueurs et au croupier
+    dans le même ordre que dans la vraie vie au cas où ça pourrait aider pour l'interface graphique
+    """
+    global croupier, joueurs
+    for repet in range(2):
+        for joueur in joueurs.keys():
+            tirer(joueurs[joueur]['main'])
+
+        if repet == 0:
+            tirer(croupier)
+
+        else:
+            tirer(croupier)
+
+
+def mise_artificielle(joueur: str):
+    """
+    Fait miser l'intelligence artificielle correspondant au joueur
+    (différentes prises de risque en fonction des IA)
+    Ici version bêta à faire évoluer pour moins de répétition
+    """
+    global joueurs
+    if joueurs[joueur]['richesse'] < 50:
+        joueurs[joueur]['mise'] = joueurs[joueur]['richesse']
+
+    else:
+        joueurs[joueur]['mise'] = 50
+
+
+def mise_joueur(joueur: str):
+    """ Fait choisir une mise au joueur jusqu'à ce que celle-ci soit inférieure à sa richesse """
+    global joueurs
+    valeur = entree_valeur(joueur + ", que voulez-vous miser? (votre richesse: " + str(joueurs[joueur]['richesse']) + ") ")
+    while valeur > joueurs[joueur]['richesse']:
+        valeur = entree_valeur("Cette mise est au-dessus de vos moyens. " +
+                               joueur + ", que voulez-vous miser? ")
+
+    joueurs[joueur]['mise'] = valeur
+
+
+def mise():
+    """ Fait miser tout le monde """
+    global joueurs
+    for joueur in joueurs.keys():
+        if joueurs[joueur]['intelligence'] == 'artificielle':
+            mise_artificielle(joueur)
+
+        else:
+            mise_joueur(joueur)
+
+        joueurs[joueur]['richesse'] -= joueurs[joueur]['mise']
+
+
+def black_jack():
+    """
+    après le début du tour, gére les cas où :
+    - un joueur fait black jack
+    - le croupier fait black jack
+    - les deux à la fois
+
+    L'arrondi pour congruence à 5 de la division d'une mise
+    (lorsqu'un joueur remporte 3/2 de sa mise avantage le le joueur
+    """
+    global joueurs, croupier
+    if detect_black_jack(croupier):
+        print('\n', "le croupier a réalisé un black jack:", croupier)
+        for joueur in joueurs:
+
+            if detect_black_jack(joueurs[joueur]['main']):
+                joueurs[joueur]['richesse'] += joueurs[joueur]['mise']
+                print('\n', joueur, "a réalisé un black jack (",
+                      joueurs[joueur]['main'], ") il réccupère donc sa mise")
+
+            else:
+                print('\n', joueur, "n'a pas réalisé de black jack (",
+                      joueurs[joueur]['main'], ") il ne réccupère donc pas sa mise")
+
+            joueurs[joueur]['mise'] = 0
+            joueurs[joueur]['main'] = []
+
+    else:
+        for joueur in joueurs:
+            if detect_black_jack(joueurs[joueur]['main']):
+                print('\n', "contrairement au croupier,", joueur,
+                      "a réalisé un black jack (", joueurs[joueur]['main'],
+                      ") il réccupère donc 3/2 de sa mise")
+                joueurs[joueur]['richesse'] += (3*joueurs[joueur]['mise'] + joueurs[joueur]['mise'] % 10) // 2
+                joueurs[joueur]['mise'] = 0
+                joueurs[joueur]['main'] = []
+
+
+def explosion_joueur(joueur: str):
+    """
+    Met à 0 la mise et la main du joueur s'il dépasse 21
+    Par ailleurs, une mise de 0 permettra par la suite
+    de savoir si un joueur est encore actif dans le tour.
+    """
+    global joueurs
+    affichage(joueur)
+    if score(joueurs[joueur]['main'])['mini'] > 21:
+        print('\n' + joueur + ", vous avez dépassé 21 et perdez donc la manche")
+        joueurs[joueur]['mise'] = 0
+        joueurs[joueur]['main'] = []
+
+
+def choix_action(joueur: str):
+    """
+    Permet à joueur de décider de ce qu'il fait (rester, tirer...)
+    contrairement à choix(joueur: str, txt: str), prend en compte que certains
+    choix ne peuvent être faits que sous conditions:
+        - doubler: richesse suffisante
+        - split: cartes de la main similaires
+    """
+    global joueurs
+    liste_actions = ['rester', 'tirer', 'abandonner']
+    doubler = ""
+    split = ""
+
+    if joueurs[joueur]['richesse'] >= joueurs[joueur]['mise']:
+        doubler = ", 'doubler"
+        liste_actions.append('doubler')
+
+    if joueurs[joueur]['main'][0]['valeur'] == joueurs[joueur]['main'][1]['valeur']:
+        split = ", 'split'"
+        liste_actions.append('split')
+
+    return choix(joueur + ", voulez-vous 'rester', 'tirer'" + doubler + split + " ou 'abandonner'? ", liste_actions)
+
+
+def choix_tirer(joueur: str):
+    """
+    Distribue une carte au joueur,
     puis lui propose jusqu'à ce que celui-ci atteigne 21 de tirer une carte ou de rester
     """
-    pass
+    global joueurs
+    action = 'tirer'
+    while action == 'tirer':
+        tirer(joueurs[joueur]['main'])
+
+        if score(joueurs[joueur]['main'])['mini'] <= 21:
+            affichage(joueur)
+            action = choix(joueur + ', écrivez "tirer" pour tirer une carte, et "rester" pour rester avec votre main ', ['tirer', 'rester'])
+
+        else:
+            action = 'rester'
+
+    explosion_joueur(joueur)
 
 
-def abandonner():
+def abandonner(joueur: str):
     """
     Le joueur réccupère la moitié de sa mise et perd sa main (comme s'il avait dépassé 21)
+    L'arrondi pour congruence à 5 de la division de la mise avantage le croupier
+    pour empêcher qu'un joueur misant 5 ne puisse garder l'intégralité de sa mise
     """
+    global joueurs
+    joueurs[joueur]['richesse'] += (joueurs[joueur]['mise'] - joueurs[joueur]['mise'] % 10) // 2
+    joueurs[joueur]['mise'] = 0
+    joueurs[joueur]['main'] = []
+
+
+def split(joueur: str):
+    """ sépare la main du joueur en deux mains et distribue une carte par main """
     pass
 
 
-def split():
-    """
-    sépare la main du joueur en deux mains et distribue une carte par main
-    """
-    pass
+def doubler(joueur: str):
+    """ Double la mise du joueur puis lui fait tirer une carte et exploser si nécessaire"""
+    global joueurs
+    joueurs[joueur]['richesse'] -= joueurs[joueur]['mise']
+    joueurs[joueur]['mise'] *= 2
+    tirer(joueurs[joueur]['main'])
+    explosion_joueur(joueur)
 
 
-# Paramétrage du nombre de joueurs et d'IA
-# Initialisation intermace graphique
-# Initialisation des mises (au choix des joueurs)
+def eliminations():
+    """Elimine joueur et l'annonce si celui-ci n'a plus de richesse"""
+    global joueurs
+    noms = [nom for nom in joueurs.keys()]
+    for joueur in noms:
 
-# Boucle while des manches :
+        if joueurs[joueur]['richesse'] == 0:
+            print('\n' + joueur + " n'a plus rien à miser, il est éliminé de la partie")
+            del joueurs[joueur]
+
+
+# Paramétrage du croupier, des joueurs et des IA
+print()
+nb_joueurs = choix_nb_joueurs()
+joueurs = creation_joueurs()
+creation_IA()
+
+# Initialisation des richesses (au choix des joueurs), cliquable sur interface
+initialisation_richesses()
+
+# Boucle while des manches:
+continuer = 'oui'
+while continuer == 'oui':
+
+    # Initialisation des mains
+    # pourrait être intégré à distribution() mais placé ici pour faciliter interface
+    initialisation_mains()
+
+    # Initialisation du sabot (p, c, k, t = pique, coeur, carreau, trefle)
+    sabot = creation_sabot()
+
+    # Première mise des joueurs
+    mise()
 
     # Distribution des cartes
+    distribution()
 
-    # Boucle des joueurs :
+    # Black Jack
+    black_jack()
 
-        # Le joueur ou l'IA fait un seul choix :
+    # Boucle des joueurs
+    for joueur in joueurs.keys():
+
+        # Si ni le croupier, ni le joueur n'a fait Black Jack, le joueur fait un seul choix:
             # Tirer
-            # Rester (pas de fonction associée au bouton car rien à faire)
             # Abandonner
+            # Doubler
             # split (uniquement possible si le joueur possède une paire)
+            # Rester (pas de fonction associée au bouton car rien à faire)
 
-        # Mise à jour de la mise
-        # Mise à jour de la main
-        # La main perd s'il dépasse 21
+        if joueurs[joueur]['mise'] == 0:
+            pass
 
+        elif joueurs[joueur]['intelligence'] == 'humaine':
+            affichage(joueur)
+            action = choix_action(joueur)
 
-    # Boucle du croupier tq main_croupier < 17 :
+            if action == 'tirer':
+                choix_tirer(joueur)
+
+            elif action == 'abandonner':
+                abandonner(joueur)
+
+            elif action == 'doubler':
+                doubler(joueur)
+
+            elif action == 'split':
+                split(joueur)
+
+        else:
+            continue
+
+    # Boucle du croupier tq main_croupier < 17:
         # Le croupier tire une carte
 
     # Le croupier perd face aux joueurs restants s'il a plus de 21
 
-    # Boucle des résultats (une itération par joueur restant) :
+    # Boucle des résultats (une itération par joueur restant):
 
-        # Si main_croupier > main_joueur :
+        # Si main_croupier > main_joueur:
             # Croupier réccupère la mise du joueur
 
-        # Sinon :
-             # le joueur réccupère 2 fois sa mise
+        # Sinon:
+            # le joueur réccupère 2 fois sa mise
+
+    # les joueurs à richesse nulle sont éliminés de la partie
+    eliminations()
+
+    if joueurs == {}:
+        print('\n', "Tous les joueurs sont éliminés, la partie est terminée")
+        break
+
+    continuer = choix('Voulez-vous continuer? Répondez "oui" ou "non": ', ['oui', 'non'])
+    print()
