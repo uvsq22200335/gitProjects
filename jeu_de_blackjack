@@ -52,7 +52,7 @@ def score(main: list):
     else:
         total_max = total + 11 * AS - AS + 1
 
-    return {'mini': total_min, 'maxi': total_max}
+    return {'min': total_min, 'max': total_max}
 
 
 def detect_black_jack(main: list):
@@ -92,8 +92,8 @@ def entree_valeur(texte: str):
 def tirer(main: list):
     """ Fait tirer une carte à la main """
     global sabot, joueurs
-    main.append(sabot[0])
-    del sabot[0]
+    main.append(sabot[-1])
+    del sabot[-1]
 
 
 def affichage(joueur: dict()):
@@ -256,7 +256,7 @@ def explosion_joueur(joueur: str):
     """
     global joueurs
     affichage(joueur)
-    if score(joueurs[joueur]['main'])['mini'] > 21:
+    if score(joueurs[joueur]['main'])['min'] > 21:
         print('\n' + joueur + ", vous avez dépassé 21 et perdez donc la manche")
         joueurs[joueur]['mise'] = 0
         joueurs[joueur]['main'] = []
@@ -296,7 +296,7 @@ def choix_tirer(joueur: str):
     while action == 'tirer':
         tirer(joueurs[joueur]['main'])
 
-        if score(joueurs[joueur]['main'])['mini'] <= 21:
+        if score(joueurs[joueur]['main'])['min'] <= 21:
             affichage(joueur)
             action = choix(joueur + ', écrivez "tirer" pour tirer une carte, et "rester" pour rester avec votre main ', ['tirer', 'rester'])
 
@@ -343,6 +343,14 @@ def eliminations():
             del joueurs[joueur]
 
 
+def tirage_croupier():
+    """Fait tirer le croupier jusqu'à ce qu'il etteigne 17"""
+    global sabot, croupier
+    while score(croupier)['min'] < 16:
+        croupier.append(sabot[-1])
+        del sabot[-1]
+
+
 # Paramétrage du croupier, des joueurs et des IA
 print()
 nb_joueurs = choix_nb_joueurs()
@@ -386,6 +394,7 @@ while continuer == 'oui':
             pass
 
         elif joueurs[joueur]['intelligence'] == 'humaine':
+            print('\n', 'Carte croupier:', croupier[0])
             affichage(joueur)
             action = choix_action(joueur)
 
@@ -406,6 +415,9 @@ while continuer == 'oui':
 
     # Boucle du croupier tq main_croupier < 17:
         # Le croupier tire une carte
+
+    tirage_croupier()
+    print(croupier)
 
     # Le croupier perd face aux joueurs restants s'il a plus de 21
 
