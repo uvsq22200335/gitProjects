@@ -8,13 +8,15 @@ le dictionnaire joueurs est de la forme:
 {
 nom du premier joueur :{
                         'intelligence: 'humaine' ou 'artificielle',
-                        'main': [{'valeur': valeur de la carte (str), 'couleur': couleur de la carte (str)}, ...],
+                        'mains': [[{'valeur': valeur de la carte (str), 'couleur': couleur de la carte (str)}, ...]],
                         'richesse': richesse actuelle, dont on a déjà déduit la mise (int)
                         'mise': mise actuelle (int)
                         },
 
 nom du deuxième joueur:...
 }
+
+mains contient plusieurs mains car split possible
 
 
 croupier est de la forme: [{'valeur': valeur de la carte, 'couleur': couleur de la carte}, ...]
@@ -100,20 +102,15 @@ def tirer(main: list):
     del sabot[-1]
 
 
-def victoire(joueur : str):
-    """ Fait récupérer sa mise à joueur et l'en informe """
-    global joueurs
-    print('\n', joueur, 'a récupère deux fois sa mise')
-    joueurs[joueur]['richesse'] += 2 * joueurs[joueur]['mise']
-    joueurs[joueur]['mise'] = 0
-
-
-def affichage(joueur: dict):
+def affichage(joueur: str):
     """ affiche clairement la situation de joueur """
     global joueurs
-    print('\n' + joueur + ": ", "\n")
-    for cle in joueurs[joueur].keys():
-        print(cle, joueurs[joueur][cle])
+    print('\n' + joueur + ": ")
+    print("richesse", joueurs[joueur]['richesse'])
+
+    for indice_mains in range(len(joueurs[joueur]['mains'])):
+        print("\n", "main", indice_mains, joueurs[joueur]['mains'][indice_mains])
+        print("mise associée", joueurs[joueur]['mise'] // len(joueurs[joueur]['mains']))
 
 
 def choix_nb_joueurs():
@@ -130,13 +127,13 @@ def creation_joueurs():
     joueurs = {}
     i = 0
     while i < nb_joueurs:
-        joueur = str(input('\n' + 'Nom du nouveau joueur (si fin des joueurs ne rien écrire): '))
+        joueur = str(input('\n' + 'Nom du nouveau joueur (si fin des joueurs humains ne rien écrire): '))
 
         if joueur == "":
             i = nb_joueurs
 
         elif joueur not in joueurs.keys():
-            joueurs[joueur] = {'intelligence': 'humaine', 'main': []}
+            joueurs[joueur] = {'intelligence': 'humaine', 'mains': [[]]}
             i += 1
 
     return joueurs
@@ -145,10 +142,11 @@ def creation_joueurs():
 def creation_IA():
     """ Complète la liste de joueurs avec des IA pour qu'il y ait la bon nombre de joueurs """
     global joueurs, nb_joueurs
-    for nom_IA in ['René', 'Gisèle', 'Elisa', 'Juliette', 'Eloa', 'Maïmouna', 'Raphaël',
-                   'Roman', 'Quentin', 'Kévin', 'Anne', 'Félix', 'Sylvie', 'Jeanne']:
+    liste_IA = [nom for nom in IA.keys()]
+    rd.shuffle(liste_IA)
+    for nom_IA in liste_IA:
         if not(nom_IA in joueurs.keys()) and len(joueurs) < nb_joueurs:
-            joueurs[nom_IA] = {'intelligence': 'artificielle', 'main': []}
+            joueurs[nom_IA] = {'intelligence': 'artificielle', 'mains': [[]]}
 
 
 def initialisation_richesses():
@@ -164,7 +162,7 @@ def initialisation_mains():
     global croupier, joueurs
     croupier = []
     for joueur in joueurs.keys():
-        joueurs[joueur]['main'] = []
+        joueurs[joueur]['mains'] = [[]]
 
 
 def distribution():
@@ -175,7 +173,7 @@ def distribution():
     global croupier, joueurs
     for repet in range(2):
         for joueur in joueurs.keys():
-            tirer(joueurs[joueur]['main'])
+            tirer(joueurs[joueur]['mains'][0])
 
         tirer(croupier)
 
@@ -186,12 +184,10 @@ def mise_artificielle(joueur: str):
     (différentes prises de risque en fonction des IA)
     Ici version bêta à faire évoluer pour moins de répétition
     """
-    global joueurs
-    if joueurs[joueur]['richesse'] < 50:
-        joueurs[joueur]['mise'] = joueurs[joueur]['richesse']
-
-    else:
-        joueurs[joueur]['mise'] = 50
+    global joueurs, IA
+    mise = int(rd.uniform(0.5, 1.5) * IA[joueur] * joueurs[joueur]['richesse']) + 5
+    mise += 5 - mise % 5 
+    joueurs[joueur]['mise'] = min(mise, joueurs[joueur]['richesse'])
 
 
 def mise_joueur(joueur: str):
@@ -234,34 +230,32 @@ def black_jack():
 
         for joueur in joueurs:
 
-            if detect_black_jack(joueurs[joueur]['main']):
+            if detect_black_jack(joueurs[joueur]['mains'][0]):
                 joueurs[joueur]['richesse'] += joueurs[joueur]['mise']
                 print('\n', joueur, "a réalisé un black jack (",
-                      joueurs[joueur]['main'], ") il réccupère donc sa mise")
+                      joueurs[joueur]['mains'][0], ") il réccupère donc sa mise")
 
             else:
                 print('\n', joueur, "n'a pas réalisé de black jack (",
-                      joueurs[joueur]['main'], ") il ne réccupère donc pas sa mise")
+                      joueurs[joueur]['mains'][0], ") il ne réccupère donc pas sa mise")
 
             joueurs[joueur]['mise'] = 0
-            joueurs[joueur]['main'] = []
+            joueurs[joueur]['mains'][0] = []
 
         croupier = []
 
     else:
-        nb_black_jack = 0
         # la variable nb_black_jack sert à détecter le cas où tous les joueurs ont black jack
         for joueur in joueurs:
-            if detect_black_jack(joueurs[joueur]['main']):
-                print('\n', "contrairement au croupier,", joueur,
-                      "a réalisé un black jack (", joueurs[joueur]['main'],
-                      ") il réccupère donc 3/2 de sa mise")
+            if detect_black_jack(joueurs[joueur]['mains'][0]):
+                print('\n', "contrairement au croupier,", joueur, "a réalisé un black jack (", joueurs[joueur]['mains'][0],
+                      ") il réccupère donc 3/2 de sa mise soit", (3*joueurs[joueur]['mise'] + joueurs[joueur]['mise'] % 10) // 2)
+                
                 joueurs[joueur]['richesse'] += (3*joueurs[joueur]['mise'] + joueurs[joueur]['mise'] % 10) // 2
                 joueurs[joueur]['mise'] = 0
-                joueurs[joueur]['main'] = []
-                nb_black_jack += 1
+                joueurs[joueur]['mains'][0] = []
         
-        if nb_black_jack == len(joueurs):
+        if [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0] == []:
             croupier = []
 
 
@@ -273,10 +267,10 @@ def explosion_joueur(joueur: str):
     """
     global joueurs
     affichage(joueur)
-    if score(joueurs[joueur]['main'])['min'] > 21:
+    if score(joueurs[joueur]['mains'][0])['min'] > 21:
         print('\n' + joueur + ", vous avez dépassé 21 et perdez donc la manche")
         joueurs[joueur]['mise'] = 0
-        joueurs[joueur]['main'] = []
+        joueurs[joueur]['mains'][0] = []
 
 
 def choix_action(joueur: str):
@@ -296,7 +290,7 @@ def choix_action(joueur: str):
         doubler = ", 'doubler"
         liste_actions.append('doubler')
 
-    if joueurs[joueur]['main'][0]['valeur'] == joueurs[joueur]['main'][1]['valeur']:
+    if joueurs[joueur]['mains'][0][0]['valeur'] == joueurs[joueur]['mains'][0][1]['valeur']:
         split = ", 'split'"
         liste_actions.append('split')
 
@@ -311,9 +305,9 @@ def choix_tirer(joueur: str):
     global joueurs
     action = 'tirer'
     while action == 'tirer':
-        tirer(joueurs[joueur]['main'])
+        tirer(joueurs[joueur]['mains'][0])
 
-        if score(joueurs[joueur]['main'])['min'] <= 21:
+        if score(joueurs[joueur]['mains'][0])['min'] <= 21:
             affichage(joueur)
             action = choix(joueur + ', écrivez "tirer" pour tirer une carte, et "rester" pour rester avec votre main ', ['tirer', 'rester'])
 
@@ -330,14 +324,19 @@ def abandonner(joueur: str):
     pour empêcher qu'un joueur misant 5 ne puisse garder l'intégralité de sa mise
     """
     global joueurs
+    print(joueur, "abandonne, il récupère donc la moitié de sa mise soit",
+          (joueurs[joueur]['mise'] - joueurs[joueur]['mise'] % 10) // 2)
+
     joueurs[joueur]['richesse'] += (joueurs[joueur]['mise'] - joueurs[joueur]['mise'] % 10) // 2
     joueurs[joueur]['mise'] = 0
-    joueurs[joueur]['main'] = []
+    joueurs[joueur]['mains'][0] = []
 
 
 def split(joueur: str):
     """ sépare la main du joueur en deux mains et distribue une carte par main """
-    pass
+    joueurs[joueur]['mains'][1].append(joueurs[joueur]['mains'][0][1])
+    del joueurs[joueur]['mains'][0][1]
+    #pas d'explosion possible à 2 cartes
 
 
 def doubler(joueur: str):
@@ -345,7 +344,7 @@ def doubler(joueur: str):
     global joueurs
     joueurs[joueur]['richesse'] -= joueurs[joueur]['mise']
     joueurs[joueur]['mise'] *= 2
-    tirer(joueurs[joueur]['main'])
+    tirer(joueurs[joueur]['mains'][0])
     explosion_joueur(joueur)
 
 
@@ -353,7 +352,7 @@ def tour_croupier():
     """Fait tirer le croupier jusqu'à ce qu'il etteigne 17"""
     global sabot, croupier, joueurs
     print('\n', "Cartes du croupier:", croupier)
-    while score(croupier)['min'] < 16:
+    while score(croupier)['min'] < 17:
         croupier.append(sabot[-1])
         del sabot[-1]
         print('\n', "Cartes du croupier:", croupier)
@@ -363,7 +362,39 @@ def tour_croupier():
         print("Le croupier a dépassé 21, il perd donc face à tous les joueurs restants")
 
         for joueur in liste_gagnants:
-            victoire(joueur)
+            print('\n', joueur, 'a récupère deux fois sa mise soit', 2 * joueurs[joueur]['mise'])
+            joueurs[joueur]['richesse'] += 2 * joueurs[joueur]['mise']
+            joueurs[joueur]['mise'] = 0
+
+
+def resultats():
+    """compare les résultats du joueur à ceux du croupier puis répartie les mises"""
+    global joueurs, croupier
+    joueurs_restants = [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0]
+    for joueur in joueurs_restants:
+        for indice_main in range(len(joueurs[joueur]['mains'])):
+
+            total_cartes = score(joueurs[joueur]['mains'][indice_main])['max']
+            if total_cartes > 21:
+                total_cartes = score(joueurs[joueur]['mains'][indice_main])['min']
+
+            if total_cartes < score(croupier)['min']:
+                print('\n', "la main de", joueur, "perd face au croupier")
+
+            else:
+                print('\n', "la main de", joueur, "gagne face au croupier,", joueur, "récupère le double de la mise associée à sa main soit",
+                      2 * joueurs[joueur]['mise'] // len(joueurs[joueur]['mains'])
+                      )
+                joueurs[joueur]['richesse'] += 2 * joueurs[joueur]['mise'] // len(joueurs[joueur]['mains'])
+            
+            print("croupier", croupier)
+            print(joueur, joueurs[joueur]['mains'][indice_main])
+
+            joueurs[joueur]['mains'][indice_main] = []
+
+        joueurs[joueur]['mise'] = 0
+    
+    croupier = []
 
 
 def eliminations():
@@ -373,7 +404,7 @@ def eliminations():
     for joueur in noms:
 
         if joueurs[joueur]['richesse'] == 0:
-            print('\n' + joueur + " n'a plus rien à miser, il est éliminé de la partie")
+            print('\n' + joueur + " n'a plus rien à miser,", joueur, "est éliminé de la partie")
             del joueurs[joueur]
 
 
@@ -382,6 +413,11 @@ croupier = []
 print()
 nb_joueurs = choix_nb_joueurs()
 joueurs = creation_joueurs()
+
+# IA = {nom de l'IA: risques pris par l'IA}
+IA = {'René': 0.1, 'Gisèle': 0.05, 'Elisa': 0.06, 'Juliette': 0.07, 'Eloa': 0.08, 'Maïmouna': 0.08, 'Raphaël': 0.09,
+      'Roman': 0.1, 'Quentin': 0.11, 'Kévin': 0.12, 'Anne': 0.03, 'Félix': 0.14, 'Sylvie': 0.1, 'Antoine': 0.06}
+
 creation_IA()
 
 # Initialisation des richesses (au choix des joueurs), cliquable sur interface
@@ -441,17 +477,22 @@ while continuer == 'oui':
 
             else:
                 continue
+        
+        # s'il reste des joueurs en lice:
+        if [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0] != []:
 
-        # Le croupier tire ses cartes et perd s'il a plus de 21
-        tour_croupier()
+            # Le croupier tire ses cartes et perd s'il a plus de 21
+            tour_croupier()
 
-        # Boucle des résultats (une itération par joueur restant):
+            # Boucle des résultats (une itération par joueur restant):
 
-            # Si main_croupier > main_joueur:
-                # Croupier réccupère la mise du joueur
+                # Si main_croupier > main_joueur:
+                    # Croupier réccupère la mise du joueur
 
-            # Sinon:
-                # le joueur réccupère 2 fois sa mise
+                # Sinon:
+                    # le joueur réccupère 2 fois sa mise
+
+            resultats()
 
     # les joueurs à richesse nulle sont éliminés de la partie
     eliminations()
