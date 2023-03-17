@@ -133,7 +133,7 @@ def creation_joueurs():
             i = nb_joueurs
 
         elif joueur not in joueurs.keys():
-            joueurs[joueur] = {'intelligence': 'humaine', 'mains': [[]]}
+            joueurs[joueur] = {'intelligence': 'humaine', 'mains': [[]], 'richesse': 0, 'mise': 0}
             i += 1
 
     return joueurs
@@ -146,7 +146,7 @@ def creation_IA():
     rd.shuffle(liste_IA)
     for nom_IA in liste_IA:
         if not(nom_IA in joueurs.keys()) and len(joueurs) < nb_joueurs:
-            joueurs[nom_IA] = {'intelligence': 'artificielle', 'mains': [[]]}
+            joueurs[nom_IA] = {'intelligence': 'artificielle', 'mains': [[]], 'richesse': 0, 'mise': 0}
 
 
 def initialisation_richesses():
@@ -186,7 +186,7 @@ def mise_artificielle(joueur: str):
     """
     global joueurs, IA
     mise = int(rd.uniform(0.5, 1.5) * IA[joueur] * joueurs[joueur]['richesse']) + 5
-    mise += 5 - mise % 5 
+    mise += 5 - mise % 5
     joueurs[joueur]['mise'] = min(mise, joueurs[joueur]['richesse'])
 
 
@@ -250,11 +250,11 @@ def black_jack():
             if detect_black_jack(joueurs[joueur]['mains'][0]):
                 print('\n', "contrairement au croupier,", joueur, "a réalisé un black jack (", joueurs[joueur]['mains'][0],
                       ") il réccupère donc 3/2 de sa mise soit", (3*joueurs[joueur]['mise'] + joueurs[joueur]['mise'] % 10) // 2)
-                
+
                 joueurs[joueur]['richesse'] += (3*joueurs[joueur]['mise'] + joueurs[joueur]['mise'] % 10) // 2
                 joueurs[joueur]['mise'] = 0
                 joueurs[joueur]['mains'][0] = []
-        
+
         if [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0] == []:
             croupier = []
 
@@ -270,7 +270,7 @@ def explosion_joueur(joueur: str):
     if score(joueurs[joueur]['mains'][0])['min'] > 21:
         print('\n' + joueur + ", vous avez dépassé 21 et perdez donc la manche")
         joueurs[joueur]['mise'] = 0
-        joueurs[joueur]['mains'][0] = []
+        joueurs[joueur]['mains'] = [[]]
 
 
 def choix_action(joueur: str):
@@ -386,14 +386,15 @@ def resultats():
                       2 * joueurs[joueur]['mise'] // len(joueurs[joueur]['mains'])
                       )
                 joueurs[joueur]['richesse'] += 2 * joueurs[joueur]['mise'] // len(joueurs[joueur]['mains'])
-            
+
             print("croupier", croupier)
             print(joueur, joueurs[joueur]['mains'][indice_main])
 
             joueurs[joueur]['mains'][indice_main] = []
 
         joueurs[joueur]['mise'] = 0
-    
+        joueurs[joueur]['mains'] = [[]]
+
     croupier = []
 
 
@@ -477,7 +478,7 @@ while continuer == 'oui':
 
             else:
                 continue
-        
+
         # s'il reste des joueurs en lice:
         if [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0] != []:
 
