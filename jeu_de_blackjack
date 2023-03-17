@@ -503,3 +503,109 @@ while continuer == 'oui':
 
     continuer = choix('Voulez-vous continuer? Répondez "oui" ou "non": ', ['oui', 'non'])
     print()
+
+
+
+from math import *
+from random import *
+from numpy import random as nprd
+
+
+#initialisations
+
+couleurs = ['trefle', 'pique', 'coeur', 'carreau']
+valeurs = ['as', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Valet', 'Dame', 'Roi']
+
+BJDict = {
+
+    'croupier' : {'score' : 0, 'bourse' : 0, 'enjeu' :True, 'blackjack' : False, 'burst' : False},
+    'joueurs' : { 
+        0 :{ 
+            'nom':'',
+            'type': 0,
+            'bourse': ''
+            
+            'enjeu' : True
+            'blackjack':False
+            'burst':False
+
+    }
+
+
+
+    }
+    
+
+}
+
+
+def stratCroupier(BJDict):
+    if BJDict['croupier']['score']<17: 
+        BJDict['croupier']['enjeu'] == True
+    else: 
+        BJDict['croupier']['enjeu'] == True
+        print(" Le croupier ne pioche plus")
+
+
+#CONTRUCTION DE LA PIOCHE pour n joueur on compte des pioches de n*52 cartes ordonnées qu'on mélangera
+
+#on construit un paquet ordonné qui servira pour constituer la pioche 
+def creation_paquet(): 
+    paquet = []
+    for x in couleurs:
+        for j in valeurs:
+            paquet.append(j "de" x)
+    return paquet
+
+#on construit le gros deck de pioche qu'on melange aléatoirement à l'aide de la fonction shuffle
+def melange_pioche(n):
+    pioche = [] #on initialise une liste vide qui correspond au gros deck de la pioche
+    cartes = paquet()
+    for i in range(n):
+        pioche.extend(cartes) #on ajoute des paquet ordonnés autant de fois qu'il y a de joueurs 
+    shuffle(pioche) #on mélange la pioche
+    return pioche
+
+#le gros deck de pioche est construit 
+
+#il faut desormais construire une fonction qui recoit les informations concernant les joueurs et les recense dans le BJDict['joueurs]. on lui demande son nom, son type (humain ou ordinateur), et sa stratégie de jeu
+
+def InfosJoueurs(BJDict, n):
+    for i in range(n):
+        print()
+        GDict['joueurs'][i] = {} #on crée une nouvelle page dans l'onglet [joueurs] du dico
+
+
+        nom = input('Nom du joueur:') #on demande le nom au joueur 
+        if nom == ' ': #si il ets invalide (deja pris ou vide), on le signale à l'utilisateur 
+            print("Vous devez saisir un nom valide")
+            continue
+        meme_nom = False
+        for j in range(i):
+            if nom == BJDict['joueurs'][j]['nom']:
+                meme_nom = True
+        if meme_nom:
+            print("Ce nom est déjà pris")
+            continue
+        else: 
+            BJDict['joueurs'][i]['nom'] = nom #si tout est bon, on l'ajoute 
+
+
+        typ = int(input("Humain(0) ou Ordinateur(1)? : "))
+        if typ != 0 and typ != 1:
+            print("Veuillez entrer une valeur valide")
+            continue
+        BJDict['joueurs'][i]['type'] = typ
+
+
+
+
+
+#il faut separer le travail en etapes 
+#1 demande du nombre de joueur 
+#2 creation de la liste de joueurs
+#3 choix du type de joueur (humain ou AI)
+#4choix dyu niveau de difficulté des joueurs AI
+#5 creation de bourse des joueurs 
+
+#on stocke la totalité des informations dnas un unique dictionnaire nommé "BJDict", il contiendra toutes les données liées au jeu en lui meme, les stratégies
