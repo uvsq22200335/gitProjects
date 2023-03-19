@@ -1,9 +1,9 @@
 <h1 align="center"> Projet IN200 : Jeu du Black Jack </h1>
 <p align="center">
 Maïmouna BA
-- Eloa 
--Roman
--Raphael </p>
+- Eloa Eguiliz
+- Roman De Crécy
+- Raphael Rakotondrabe</p>
 
 <h2 align="center">
 REGLES ET DEROULEMENT D’UNE PARTIE </h2>
