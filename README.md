@@ -41,7 +41,7 @@ Dès qu’un joueur fait plus de 21, on dit qu’il « brûle » (« burst ») e
 Quant au croupier, une fois tous les joueurs servis, il joue pour son compte selon une règle universelle : « la banque tire à 16, reste à 17 ». Ainsi, le croupier tire des cartes jusqu'à atteindre un nombre supérieur ou égal à 179 (cf. Service du Croupier)
 </div>
  
-Le focntionnement détaillé du programme est accessible dans le fichier  
+
 
 
 
