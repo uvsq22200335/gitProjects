@@ -8,9 +8,8 @@ le dictionnaire joueurs est de la forme:
 {
 nom du premier joueur :{
                         'intelligence: 'humaine' ou 'artificielle',
-                        'mains': [[{'valeur': valeur de la carte (str), 'couleur': couleur de la carte (str)}, ...]],
+                        'mains': [{'mise': mise associée, 'jeu': [{'valeur': valeur de la carte (str), 'couleur': couleur de la carte (str)}, ...], 'main_2'...],
                         'richesse': richesse actuelle, dont on a déjà déduit la mise (int)
-                        'mise': mise actuelle (int)
                         },
 
 nom du deuxième joueur:...
@@ -34,9 +33,20 @@ def creation_sabot():
     return sabot
 
 
+def mise_totale(mains: list):
+    """
+    Renvoie la mise totale de la main
+    """
+    S = 0
+    for main in mains:
+        S += main['mise']
+
+    return S
+
+
 def score(main: list):
     """
-    calcule la valeur totale d'une main et renoie [vmin, vmax]
+    calcule la valeur totale d'une main et renvoie [vmin, vmax]
     (deux éléments car valeur dépend des AS et 2 valeurs idéales possibles selon le contexte)
     """
     AS = 0
@@ -95,10 +105,10 @@ def entree_valeur(texte: str):
     return valeur
 
 
-def tirer(main: list):
-    """ Fait tirer une carte à la main """
+def tirer(jeu: list):
+    """ Fait tirer une carte au jeu """
     global sabot, joueurs
-    main.append(sabot[-1])
+    jeu.append(sabot[-1])
     del sabot[-1]
 
 
@@ -108,9 +118,10 @@ def affichage(joueur: str):
     print('\n' + joueur + ": ")
     print("richesse", joueurs[joueur]['richesse'])
 
-    for indice_mains in range(len(joueurs[joueur]['mains'])):
-        print("\n", "main", indice_mains, joueurs[joueur]['mains'][indice_mains])
-        print("mise associée", joueurs[joueur]['mise'] // len(joueurs[joueur]['mains']))
+    for indice_main in range(len(joueurs[joueur]['mains'])):
+        print("\n", "main", indice_main, ":")
+        print("   jeu:", joueurs[joueur]['mains'][indice_main]['jeu'])
+        print("   mise associée", joueurs[joueur]['mains'][indice_main]['mise'])
 
 
 def choix_nb_joueurs():
@@ -133,7 +144,7 @@ def creation_joueurs():
             i = nb_joueurs
 
         elif joueur not in joueurs.keys():
-            joueurs[joueur] = {'intelligence': 'humaine', 'mains': [[]], 'richesse': 0, 'mise': 0}
+            joueurs[joueur] = {'intelligence': 'humaine', 'mains': [{'mise': 0, 'jeu':  []}], 'richesse': 0}
             i += 1
 
     return joueurs
@@ -162,7 +173,7 @@ def initialisation_mains():
     global croupier, joueurs
     croupier = []
     for joueur in joueurs.keys():
-        joueurs[joueur]['mains'] = [[]]
+        joueurs[joueur]['mains'] = [{'mise': 0, 'jeu': []}]
 
 
 def distribution():
@@ -173,7 +184,7 @@ def distribution():
     global croupier, joueurs
     for repet in range(2):
         for joueur in joueurs.keys():
-            tirer(joueurs[joueur]['mains'][0])
+            tirer(joueurs[joueur]['mains'][0]['jeu'])
 
         tirer(croupier)
 
@@ -187,7 +198,7 @@ def mise_artificielle(joueur: str):
     global joueurs, IA
     mise = int(rd.uniform(0.5, 1.5) * IA[joueur] * joueurs[joueur]['richesse']) + 5
     mise += 5 - mise % 5
-    joueurs[joueur]['mise'] = min(mise, joueurs[joueur]['richesse'])
+    joueurs[joueur]['mains'][0]['mise'] = min(mise, joueurs[joueur]['richesse'])
 
 
 def mise_joueur(joueur: str):
@@ -198,7 +209,7 @@ def mise_joueur(joueur: str):
         valeur = entree_valeur("Cette mise est au-dessus de vos moyens. " +
                                joueur + ", que voulez-vous miser? ")
 
-    joueurs[joueur]['mise'] = valeur
+    joueurs[joueur]['mains'][0]['mise'] = valeur
 
 
 def mise():
@@ -211,7 +222,7 @@ def mise():
         else:
             mise_joueur(joueur)
 
-        joueurs[joueur]['richesse'] -= joueurs[joueur]['mise']
+        joueurs[joueur]['richesse'] -= joueurs[joueur]['mains'][0]['mise']
 
 
 def black_jack():
@@ -230,36 +241,36 @@ def black_jack():
 
         for joueur in joueurs:
 
-            if detect_black_jack(joueurs[joueur]['mains'][0]):
-                joueurs[joueur]['richesse'] += joueurs[joueur]['mise']
+            if detect_black_jack(joueurs[joueur]['mains'][0]['jeu']):
+                joueurs[joueur]['richesse'] += joueurs[joueur]['mains'][0]['mise']
                 print('\n', joueur, "a réalisé un black jack (",
-                      joueurs[joueur]['mains'][0], ") il réccupère donc sa mise")
+                      joueurs[joueur]['mains'][0]['jeu'], ") il réccupère donc sa mise")
 
             else:
                 print('\n', joueur, "n'a pas réalisé de black jack (",
-                      joueurs[joueur]['mains'][0], ") il ne réccupère donc pas sa mise")
+                      joueurs[joueur]['mains'][0]['jeu'], ") il ne réccupère donc pas sa mise")
 
-            joueurs[joueur]['mise'] = 0
-            joueurs[joueur]['mains'][0] = []
+            joueurs[joueur]['mains'][0]['mise'] = 0
+            joueurs[joueur]['mains'][0]['jeu'] = []
 
         croupier = []
 
     else:
         # la variable nb_black_jack sert à détecter le cas où tous les joueurs ont black jack
         for joueur in joueurs:
-            if detect_black_jack(joueurs[joueur]['mains'][0]):
-                print('\n', "contrairement au croupier,", joueur, "a réalisé un black jack (", joueurs[joueur]['mains'][0],
-                      ") il réccupère donc 3/2 de sa mise soit", (3*joueurs[joueur]['mise'] + joueurs[joueur]['mise'] % 10) // 2)
+            if detect_black_jack(joueurs[joueur]['mains'][0]['jeu']):
+                print('\n', "contrairement au croupier,", joueur, "a réalisé un black jack (", joueurs[joueur]['mains'][0]['jeu'],
+                      ") il réccupère donc 3/2 de sa mise soit", (3*joueurs[joueur]['mains'][0]['mise'] + joueurs[joueur]['mains'][0]['mise'] % 10) // 2)
 
-                joueurs[joueur]['richesse'] += (3*joueurs[joueur]['mise'] + joueurs[joueur]['mise'] % 10) // 2
-                joueurs[joueur]['mise'] = 0
-                joueurs[joueur]['mains'][0] = []
+                joueurs[joueur]['richesse'] += (3*joueurs[joueur]['mains'][0]['mise'] + joueurs[joueur]['mains'][0]['mise'] % 10) // 2
+                joueurs[joueur]['mains'][0]['mise'] = 0
+                joueurs[joueur]['mains'][0]['jeu'] = []
 
-        if [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0] == []:
+        if [joueur for joueur in joueurs.keys() if joueurs[joueur]['mains'][0]['mise'] != 0] == []:
             croupier = []
 
 
-def explosion_joueur(joueur: str):
+def explosion_joueur(joueur: str, indice_main: int):
     """
     Met à 0 la mise et la main du joueur s'il dépasse 21
     Par ailleurs, une mise de 0 permettra par la suite
@@ -267,13 +278,13 @@ def explosion_joueur(joueur: str):
     """
     global joueurs
     affichage(joueur)
-    if score(joueurs[joueur]['mains'][0])['min'] > 21:
-        print('\n' + joueur + ", vous avez dépassé 21 et perdez donc la manche")
-        joueurs[joueur]['mise'] = 0
-        joueurs[joueur]['mains'] = [[]]
+    if score(joueurs[joueur]['mains'][indice_main]['jeu'])['min'] > 21:
+        print('\n' + joueur + ", vous avez dépassé 21, votre main", indice_main, "perd donc la manche")
+        joueurs[joueur]['mains'][0]['mise'] = 0
+        joueurs[joueur]['mains'][indice_main]['jeu'] = [[]]
 
 
-def choix_action(joueur: str):
+def choix_action(joueur: str, indice_main: int):
     """
     Permet à joueur de décider de ce qu'il fait (rester, tirer...)
     contrairement à choix(joueur: str, txt: str), prend en compte que certains
@@ -286,18 +297,18 @@ def choix_action(joueur: str):
     doubler = ""
     split = ""
 
-    if joueurs[joueur]['richesse'] >= joueurs[joueur]['mise']:
+    if joueurs[joueur]['richesse'] >= joueurs[joueur]['mains'][0]['mise']:
         doubler = ", 'doubler"
         liste_actions.append('doubler')
 
-    if joueurs[joueur]['mains'][0][0]['valeur'] == joueurs[joueur]['mains'][0][1]['valeur']:
+    if joueurs[joueur]['mains'][indice_main]['jeu'][0]['valeur'] == joueurs[joueur]['mains'][indice_main]['jeu'][1]['valeur']:
         split = ", 'split'"
         liste_actions.append('split')
 
     return choix(joueur + ", voulez-vous 'rester', 'tirer'" + doubler + split + " ou 'abandonner'? ", liste_actions)
 
 
-def choix_tirer(joueur: str):
+def choix_tirer(joueur: str, indice_main: int):
     """
     Distribue une carte au joueur,
     puis lui propose jusqu'à ce que celui-ci atteigne 21 de tirer une carte ou de rester
@@ -305,47 +316,68 @@ def choix_tirer(joueur: str):
     global joueurs
     action = 'tirer'
     while action == 'tirer':
-        tirer(joueurs[joueur]['mains'][0])
+        tirer(joueurs[joueur]['mains'][indice_main]['jeu'])
 
-        if score(joueurs[joueur]['mains'][0])['min'] <= 21:
+        if score(joueurs[joueur]['mains'][indice_main]['jeu'])['min'] <= 21:
             affichage(joueur)
             action = choix(joueur + ', écrivez "tirer" pour tirer une carte, et "rester" pour rester avec votre main ', ['tirer', 'rester'])
 
         else:
             action = 'rester'
 
-    explosion_joueur(joueur)
+    explosion_joueur(joueur, indice_main)
 
 
-def abandonner(joueur: str):
+def abandonner(joueur: str, indice_main: int):
     """
-    Le joueur réccupère la moitié de sa mise et perd sa main (comme s'il avait dépassé 21)
+    Le joueur réccupère perd sa main et la mise qui lui était associée
     L'arrondi pour congruence à 5 de la division de la mise avantage le croupier
     pour empêcher qu'un joueur misant 5 ne puisse garder l'intégralité de sa mise
     """
     global joueurs
-    print(joueur, "abandonne, il récupère donc la moitié de sa mise soit",
-          (joueurs[joueur]['mise'] - joueurs[joueur]['mise'] % 10) // 2)
+    print(joueur, "abandonne avec sa main", indice_main,", il récupère donc la moitié de sa mise soit",
+          (joueurs[joueur]['mains'][indice_main]['mise'] - joueurs[joueur]['mains'][indice_main]['mise'] % 10) // 2)
 
-    joueurs[joueur]['richesse'] += (joueurs[joueur]['mise'] - joueurs[joueur]['mise'] % 10) // 2
-    joueurs[joueur]['mise'] = 0
-    joueurs[joueur]['mains'][0] = []
+    joueurs[joueur]['richesse'] += (joueurs[joueur]['mains'][0]['mise'] - joueurs[joueur]['mains'][0]['mise'] % 10) // 2
+    joueurs[joueur]['mains'][indice_main]['mise'] = 0
+    joueurs[joueur]['mains'][indice_main]['jeu'] = []
 
 
 def split(joueur: str):
-    """ sépare la main du joueur en deux mains et distribue une carte par main """
-    joueurs[joueur]['mains'][1].append(joueurs[joueur]['mains'][0][1])
-    del joueurs[joueur]['mains'][0][1]
-    #pas d'explosion possible à 2 cartes
+    """
+    sépare la main du joueur en deux mains et distribue une carte par main.
+    Diminue de 1 le prochain indice de main de la prochaine action (pour que la main
+    repasse dans la boucle du tour du joueur)si la paire n'est pas d'AS, et
+    l'augmente d'un sinon (pour la raison inverse)
+    """
+    global joueurs, indice_main
+
+    # 3 lignes compliquées car il faut bien que les deux jeux soient des listes indépendantes
+    jeu_bis = [{'valeur': joueurs[joueur]['mains'][indice_main]['jeu'][1]['valeur'], 'couleur': joueurs[joueur]['mains'][indice_main]['jeu'][1]['couleur']}]
+    main_bis = {'mise': joueurs[joueur]['mains'][indice_main]['mise'], 'jeu': jeu_bis}
+    joueurs[joueur]['mains'].insert(indice_main + 1, main_bis)
+
+    del joueurs[joueur]['mains'][indice_main]['jeu'][1]
+    # del joueurs[joueur]['mains'][indice_main + 1]['jeu'][0]
+
+    tirer(joueurs[joueur]['mains'][indice_main]['jeu'])
+    tirer(joueurs[joueur]['mains'][indice_main + 1]['jeu'])
+
+    if joueurs[joueur]['mains'][indice_main]['jeu'][0]['valeur'] == '1':
+        indice_main += 1
+
+    else:
+        indice_main -= 1
+    # remarque: pas d'explosion possible à 2 cartes
 
 
-def doubler(joueur: str):
-    """ Double la mise du joueur puis lui fait tirer une carte et exploser si nécessaire"""
+def doubler(joueur: str, indice_main: int):
+    """ Double la mise du joueur puis lui fait tirer une carte et le fait exploser si nécessaire"""
     global joueurs
-    joueurs[joueur]['richesse'] -= joueurs[joueur]['mise']
-    joueurs[joueur]['mise'] *= 2
-    tirer(joueurs[joueur]['mains'][0])
-    explosion_joueur(joueur)
+    joueurs[joueur]['richesse'] -= joueurs[joueur]['mains'][indice_main]['mise']
+    joueurs[joueur]['mains'][indice_main]['mise'] *= 2
+    tirer(joueurs[joueur]['mains'][0]['jeu'])
+    explosion_joueur(joueur, indice_main)
 
 
 def tour_croupier():
@@ -358,42 +390,42 @@ def tour_croupier():
         print('\n', "Cartes du croupier:", croupier)
 
     if score(croupier)['max'] > 21:
-        liste_gagnants = [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0]
         print("Le croupier a dépassé 21, il perd donc face à tous les joueurs restants")
 
-        for joueur in liste_gagnants:
-            print('\n', joueur, 'a récupère deux fois sa mise soit', 2 * joueurs[joueur]['mise'])
-            joueurs[joueur]['richesse'] += 2 * joueurs[joueur]['mise']
-            joueurs[joueur]['mise'] = 0
+        for joueur in joueurs.keys():
+            for indice_main in range(len(joueurs[joueur]['mains'])):
+                if joueurs[joueur]['mains'][indice_main]['mise'] != 0:
+                    print('\n', joueur, "a récupère deux fois la mise associée à sa main", indice_main, "soit", 2 * joueurs[joueur]['mains'][indice_main]['mise'])
+                    joueurs[joueur]['richesse'] += 2 * joueurs[joueur]['mains'][indice_main]['mise']
+                    joueurs[joueur]['mains'][indice_main]['mise'] = 0
 
 
 def resultats():
     """compare les résultats du joueur à ceux du croupier puis répartie les mises"""
     global joueurs, croupier
-    joueurs_restants = [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0]
-    for joueur in joueurs_restants:
+    for joueur in joueurs.keys():
         for indice_main in range(len(joueurs[joueur]['mains'])):
+            if joueurs[joueur]['mains'][indice_main]['mise'] != 0:
 
-            total_cartes = score(joueurs[joueur]['mains'][indice_main])['max']
-            if total_cartes > 21:
-                total_cartes = score(joueurs[joueur]['mains'][indice_main])['min']
+                total_cartes = score(joueurs[joueur]['mains'][indice_main]['jeu'])['max']
+                if total_cartes > 21:
+                    total_cartes = score(joueurs[joueur]['mains'][indice_main]['jeu'])['min']
 
-            if total_cartes < score(croupier)['min']:
-                print('\n', "la main de", joueur, "perd face au croupier")
+                if total_cartes < score(croupier)['min']:
+                    print('\n', "la main", indice_main, "de", joueur, "perd face au croupier")
 
-            else:
-                print('\n', "la main de", joueur, "gagne face au croupier,", joueur, "récupère le double de la mise associée à sa main soit",
-                      2 * joueurs[joueur]['mise'] // len(joueurs[joueur]['mains'])
-                      )
-                joueurs[joueur]['richesse'] += 2 * joueurs[joueur]['mise'] // len(joueurs[joueur]['mains'])
+                else:
+                    print('\n', "la main", indice_main, "de", joueur, "gagne face au croupier,", joueur,
+                          "récupère le double de la mise associée à sa main soit", 2 * joueurs[joueur]['mains'][indice_main]['mise'])
 
-            print("croupier", croupier)
-            print(joueur, joueurs[joueur]['mains'][indice_main])
+                    joueurs[joueur]['richesse'] += 2 * joueurs[joueur]['mains'][indice_main]['mise']
 
-            joueurs[joueur]['mains'][indice_main] = []
+                print("croupier", croupier)
+                print(joueur, joueurs[joueur]['mains'][indice_main])
 
-        joueurs[joueur]['mise'] = 0
-        joueurs[joueur]['mains'] = [[]]
+                joueurs[joueur]['mains'][indice_main] = []
+
+        joueurs[joueur]['mains'] = [{'mise': 0, 'jeu':  []}]
 
     croupier = []
 
@@ -449,38 +481,43 @@ while continuer == 'oui':
         # Boucle des joueurs
         for joueur in joueurs.keys():
 
-            # Si ni le croupier, ni le joueur n'a fait Black Jack, le joueur fait un seul choix:
+            # Si ni le croupier, ni le joueur n'a fait Black Jack, le joueur, pour chacun de ses jeux, fait un seul choix:
                 # Tirer
                 # Abandonner
                 # Doubler
                 # split (uniquement possible si le joueur possède une paire)
                 # Rester (pas de fonction associée au bouton car rien à faire)
 
-            if joueurs[joueur]['mise'] == 0:
-                pass
+            indice_main = 0
+            while indice_main < len(joueurs[joueur]['mains']):
 
-            elif joueurs[joueur]['intelligence'] == 'humaine':
-                print('\n', 'Carte croupier:', croupier[0])
-                affichage(joueur)
-                action = choix_action(joueur)
+                if joueurs[joueur]['mains'][indice_main ]['mise'] == 0:
+                    pass
 
-                if action == 'tirer':
-                    choix_tirer(joueur)
+                elif joueurs[joueur]['intelligence'] == 'humaine':
+                    print('\n', 'Carte croupier:', croupier[0])
+                    affichage(joueur)
+                    action = choix_action(joueur, indice_main)
 
-                elif action == 'abandonner':
-                    abandonner(joueur)
+                    if action == 'tirer':
+                        choix_tirer(joueur, indice_main)
 
-                elif action == 'doubler':
-                    doubler(joueur)
+                    elif action == 'abandonner':
+                        abandonner(joueur, indice_main)
 
-                elif action == 'split':
-                    split(joueur)
+                    elif action == 'doubler':
+                        doubler(joueur, indice_main)
 
-            else:
-                continue
+                    elif action == 'split':
+                        split(joueur)
+
+                else:
+                    continue
+
+                indice_main += 1
 
         # s'il reste des joueurs en lice:
-        if [joueur for joueur in joueurs.keys() if joueurs[joueur]['mise'] != 0] != []:
+        if [joueur for joueur in joueurs.keys() if mise_totale(joueurs[joueur]['mains']) != 0] != []:
 
             # Le croupier tire ses cartes et perd s'il a plus de 21
             tour_croupier()
@@ -506,7 +543,7 @@ while continuer == 'oui':
     print()
 
 
-
+"""
 from math import *
 from random import *
 from numpy import random as nprd
@@ -520,12 +557,12 @@ valeurs = ['as', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Valet', 'Dame', 
 BJDict = {
 
     'croupier' : {'score' : 0, 'bourse' : 0, 'enjeu' :True, 'blackjack' : False, 'burst' : False},
-    'joueurs' : { 
-        0 :{ 
+    'joueurs' : {
+        0 :{
             'nom':'',
             'type': 0,
             'bourse': ''
-            
+
             'enjeu' : True
             'blackjack':False
             'burst':False
@@ -535,23 +572,23 @@ BJDict = {
 
 
     }
-    
+
 
 }
 
 
 def stratCroupier(BJDict):
-    if BJDict['croupier']['score']<17: 
+    if BJDict['croupier']['score']<17:
         BJDict['croupier']['enjeu'] == True
-    else: 
+    else:
         BJDict['croupier']['enjeu'] == True
         print(" Le croupier ne pioche plus")
 
 
 #CONTRUCTION DE LA PIOCHE pour n joueur on compte des pioches de n*52 cartes ordonnées qu'on mélangera
 
-#on construit un paquet ordonné qui servira pour constituer la pioche 
-def creation_paquet(): 
+#on construit un paquet ordonné qui servira pour constituer la pioche
+def creation_paquet():
     paquet = []
     for x in couleurs:
         for j in valeurs:
@@ -563,11 +600,11 @@ def melange_pioche(n):
     pioche = [] #on initialise une liste vide qui correspond au gros deck de la pioche
     cartes = paquet()
     for i in range(n):
-        pioche.extend(cartes) #on ajoute des paquet ordonnés autant de fois qu'il y a de joueurs 
+        pioche.extend(cartes) #on ajoute des paquet ordonnés autant de fois qu'il y a de joueurs
     shuffle(pioche) #on mélange la pioche
     return pioche
 
-#le gros deck de pioche est construit 
+#le gros deck de pioche est construit
 
 #il faut desormais construire une fonction qui recoit les informations concernant les joueurs et les recense dans le BJDict['joueurs]. on lui demande son nom, son type (humain ou ordinateur), et sa stratégie de jeu
 
@@ -577,8 +614,8 @@ def InfosJoueurs(BJDict, n):
         GDict['joueurs'][i] = {} #on crée une nouvelle page dans l'onglet [joueurs] du dico
 
 
-        nom = input('Nom du joueur:') #on demande le nom au joueur 
-        if nom == ' ': #si il ets invalide (deja pris ou vide), on le signale à l'utilisateur 
+        nom = input('Nom du joueur:') #on demande le nom au joueur
+        if nom == ' ': #si il ets invalide (deja pris ou vide), on le signale à l'utilisateur
             print("Vous devez saisir un nom valide")
             continue
         meme_nom = False
@@ -588,8 +625,8 @@ def InfosJoueurs(BJDict, n):
         if meme_nom:
             print("Ce nom est déjà pris")
             continue
-        else: 
-            BJDict['joueurs'][i]['nom'] = nom #si tout est bon, on l'ajoute 
+        else:
+            BJDict['joueurs'][i]['nom'] = nom #si tout est bon, on l'ajoute
 
 
         typ = int(input("Humain(0) ou Ordinateur(1)? : "))
@@ -602,11 +639,12 @@ def InfosJoueurs(BJDict, n):
 
 
 
-#il faut separer le travail en etapes 
-#1 demande du nombre de joueur 
+#il faut separer le travail en etapes
+#1 demande du nombre de joueur
 #2 creation de la liste de joueurs
 #3 choix du type de joueur (humain ou AI)
 #4choix dyu niveau de difficulté des joueurs AI
-#5 creation de bourse des joueurs 
+#5 creation de bourse des joueurs
 
 #on stocke la totalité des informations dnas un unique dictionnaire nommé "BJDict", il contiendra toutes les données liées au jeu en lui meme, les stratégies
+"""
