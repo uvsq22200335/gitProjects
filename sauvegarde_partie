@@ -1,0 +1,22 @@
+{
+    "lui": {
+        "intelligence": "humaine",
+        "mains": [
+            {
+                "jeu": [],
+                "mise": 0
+            }
+        ],
+        "richesse": 400
+    },
+    "moi": {
+        "intelligence": "humaine",
+        "mains": [
+            {
+                "jeu": [],
+                "mise": 0
+            }
+        ],
+        "richesse": 300
+    }
+}

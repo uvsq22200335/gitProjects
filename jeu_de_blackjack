@@ -8,7 +8,19 @@ le dictionnaire joueurs est de la forme:
 {
 nom du premier joueur :{
                         'intelligence: 'humaine' ou 'artificielle',
-                        'mains': [{'mise': mise associée, 'jeu': [{'valeur': valeur de la carte (str), 'couleur': couleur de la carte (str)}, ...], 'main_2'...],
+                        'mains': [
+                                    {
+                                        'mise': mise associée, 
+                                        'jeu': [
+                                                    {
+                                                        'valeur': valeur de la carte (str), 
+                                                        'couleur': couleur de la carte (str)
+                                                    }
+                                                    , ...
+                                                ], 
+                                    },
+                                    {...}
+                                    ]
                         'richesse': richesse actuelle, dont on a déjà déduit la mise (int)
                         },
 
@@ -22,6 +34,24 @@ croupier est de la forme: [{'valeur': valeur de la carte, 'couleur': couleur de 
 """
 
 import random as rd
+import json as js
+
+
+def sauvegarde():
+    """ sauvegarde le dictionnaire joueurs dans le fichier sauvegarde_partie """
+    global joueurs
+    sauvegarde_json = open("sauvegarde_partie", 'w')
+    js.dump(joueurs, sauvegarde_json, sort_keys=True, indent=4)
+    sauvegarde_json.close()
+
+
+def initialisation_par_sauvegarde():
+    """ retourne le dictionnaire joueurs de la partie précédente """
+    sauvegarde_json = open("sauvegarde_partie", 'r')
+    joueurs = sauvegarde_json.read()
+    joueurs = js.loads(joueurs)
+    sauvegarde_json.close()
+    return joueurs
 
 
 def creation_sabot():
@@ -441,20 +471,28 @@ def eliminations():
             del joueurs[joueur]
 
 
-# Paramétrage du croupier, des joueurs et des IA
-croupier = []
-print()
-nb_joueurs = choix_nb_joueurs()
-joueurs = creation_joueurs()
+reprendre_partie = choix('Voulez-vous reprendre la partie précédente? Répondez "oui" ou "non": ', ['oui', 'non'])
 
-# IA = {nom de l'IA: risques pris par l'IA}
-IA = {'René': 0.1, 'Gisèle': 0.05, 'Elisa': 0.06, 'Juliette': 0.07, 'Eloa': 0.08, 'Maïmouna': 0.08, 'Raphaël': 0.09,
-      'Roman': 0.1, 'Quentin': 0.11, 'Kévin': 0.12, 'Anne': 0.03, 'Félix': 0.14, 'Sylvie': 0.1, 'Antoine': 0.06}
+if reprendre_partie == 'non':
+    # Paramétrage du croupier, des joueurs et des IA
+    croupier = []
+    print()
+    nb_joueurs = choix_nb_joueurs()
+    joueurs = creation_joueurs()
 
-creation_IA()
+    # IA = {nom de l'IA: risques pris par l'IA}
+    IA = {'René': 0.1, 'Gisèle': 0.05, 'Elisa': 0.06, 'Juliette': 0.07, 'Eloa': 0.08, 'Maïmouna': 0.08, 'Raphaël': 0.09,
+        'Roman': 0.1, 'Quentin': 0.11, 'Kévin': 0.12, 'Anne': 0.03, 'Félix': 0.14, 'Sylvie': 0.1, 'Antoine': 0.06}
 
-# Initialisation des richesses (au choix des joueurs), cliquable sur interface
-initialisation_richesses()
+    creation_IA()
+
+    # Initialisation des richesses (au choix des joueurs), cliquable sur interface
+    initialisation_richesses()
+
+
+else:
+    joueurs = initialisation_par_sauvegarde()
+
 
 # Boucle while des manches:
 continuer = 'oui'
@@ -463,6 +501,9 @@ while continuer == 'oui':
     # Initialisation des mains
     # pourrait être intégré à distribution() mais placé ici pour faciliter interface
     initialisation_mains()
+
+    # sauvegarde, faite ici et non uniquement après la boucle pour sauvegarder en cas de bug
+    sauvegarde()
 
     # Initialisation du sabot (p, c, k, t = pique, coeur, carreau, trefle)
     sabot = creation_sabot()
@@ -491,7 +532,7 @@ while continuer == 'oui':
             indice_main = 0
             while indice_main < len(joueurs[joueur]['mains']):
 
-                if joueurs[joueur]['mains'][indice_main ]['mise'] == 0:
+                if joueurs[joueur]['mains'][indice_main]['mise'] == 0:
                     pass
 
                 elif joueurs[joueur]['intelligence'] == 'humaine':
@@ -541,6 +582,9 @@ while continuer == 'oui':
 
     continuer = choix('Voulez-vous continuer? Répondez "oui" ou "non": ', ['oui', 'non'])
     print()
+
+initialisation_mains()
+sauvegarde()
 
 
 """
