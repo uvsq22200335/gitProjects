@@ -10,14 +10,14 @@ nom du premier joueur :{
                         'intelligence: 'humaine' ou 'artificielle',
                         'mains': [
                                     {
-                                        'mise': mise associée, 
+                                        'mise': mise associée,
                                         'jeu': [
                                                     {
-                                                        'valeur': valeur de la carte (str), 
+                                                        'valeur': valeur de la carte (str),
                                                         'couleur': couleur de la carte (str)
                                                     }
                                                     , ...
-                                                ], 
+                                                ],
                                     },
                                     {...}
                                     ]
@@ -38,20 +38,20 @@ import json as js
 
 
 def sauvegarde():
-    """ sauvegarde le dictionnaire joueurs dans le fichier sauvegarde_partie """
+    """ sauvegarde le dictionnaire joueurs dans le fichier sauvegarde_partie.json """
     global joueurs
-    sauvegarde_json = open("sauvegarde_partie", 'w')
+    sauvegarde_json = open("sauvegarde_partie.json", 'w')
     js.dump(joueurs, sauvegarde_json, sort_keys=True, indent=4)
     sauvegarde_json.close()
 
 
-def initialisation_par_sauvegarde():
-    """ retourne le dictionnaire joueurs de la partie précédente """
-    sauvegarde_json = open("sauvegarde_partie", 'r')
-    joueurs = sauvegarde_json.read()
-    joueurs = js.loads(joueurs)
-    sauvegarde_json.close()
-    return joueurs
+def recuperation_dictionnaire(fichier: dict()):
+    """ retourne le dictionnaire contenu dans le fichier """
+    fichier_json = open(fichier, 'r')
+    fichier_str = fichier_json.read()
+    fichier_json.close()
+    fichier = js.loads(fichier_str)
+    return fichier
 
 
 def creation_sabot():
@@ -74,14 +74,14 @@ def mise_totale(mains: list):
     return S
 
 
-def score(main: list):
+def score(jeu: list):
     """
-    calcule la valeur totale d'une main et renvoie [vmin, vmax]
+    calcule la valeur totale d'un jeu et renvoie {min, max}
     (deux éléments car valeur dépend des AS et 2 valeurs idéales possibles selon le contexte)
     """
     AS = 0
     total = 0
-    for carte in main:
+    for carte in jeu:
         if carte['valeur'] in ['10', 'J', 'Q', 'K']:
             total += 10
 
@@ -181,9 +181,9 @@ def creation_joueurs():
 
 
 def creation_IA():
-    """ Complète la liste de joueurs avec des IA pour qu'il y ait la bon nombre de joueurs """
+    """ Complète la liste de joueurs avec des IA pour qu'il y ait le bon nombre de joueurs """
     global joueurs, nb_joueurs
-    liste_IA = [nom for nom in IA.keys()]
+    liste_IA = [nom for nom in personnages_IA.keys()]
     rd.shuffle(liste_IA)
     for nom_IA in liste_IA:
         if not(nom_IA in joueurs.keys()) and len(joueurs) < nb_joueurs:
@@ -226,7 +226,7 @@ def mise_artificielle(joueur: str):
     Ici version bêta à faire évoluer pour moins de répétition
     """
     global joueurs, IA
-    mise = int(rd.uniform(0.5, 1.5) * IA[joueur] * joueurs[joueur]['richesse']) + 5
+    mise = int(rd.uniform(0.5, 1.5) * personnages_IA[joueur] * joueurs[joueur]['richesse']) + 5
     mise += 5 - mise % 5
     joueurs[joueur]['mains'][0]['mise'] = min(mise, joueurs[joueur]['richesse'])
 
@@ -274,11 +274,11 @@ def black_jack():
             if detect_black_jack(joueurs[joueur]['mains'][0]['jeu']):
                 joueurs[joueur]['richesse'] += joueurs[joueur]['mains'][0]['mise']
                 print('\n', joueur, "a réalisé un black jack (",
-                      joueurs[joueur]['mains'][0]['jeu'], ") il réccupère donc sa mise")
+                      joueurs[joueur]['mains'][0]['jeu'], "),", joueur, "réccupère donc sa mise")
 
             else:
                 print('\n', joueur, "n'a pas réalisé de black jack (",
-                      joueurs[joueur]['mains'][0]['jeu'], ") il ne réccupère donc pas sa mise")
+                      joueurs[joueur]['mains'][0]['jeu'], "),", joueur, "ne réccupère donc pas sa mise")
 
             joueurs[joueur]['mains'][0]['mise'] = 0
             joueurs[joueur]['mains'][0]['jeu'] = []
@@ -314,6 +314,58 @@ def explosion_joueur(joueur: str, indice_main: int):
         joueurs[joueur]['mains'][indice_main]['jeu'] = [[]]
 
 
+def choix_IA(joueur: str, indice_main: int, liste_actions: list):
+    """
+    Si fonction == choix_action
+        retourne le meilleur choix d'action possible en se référant à la stratégie
+        de base qui est contenue dans le dictionnaire strategie_choix_action_IA si
+
+    Si fonction == choix_tirer
+        retourne le meilleur choix d'action possible en se référant à la stratégie
+        contenue dans le dictionnaire strategie_choix_tirer_IA
+    """
+    global joueurs, croupier, strategie_choix_action_IA, strategie_choix_tirer_IA
+
+    jeu = joueurs[joueur]['mains'][indice_main]['jeu']
+    score_jeu = score(jeu)['min']
+
+    if croupier[0]['valeur'] in ['J', 'Q', 'K']:
+        score_croupier = 10
+
+    else:
+        score_croupier = int(croupier[0]['valeur'])
+
+    if split in liste_actions:
+        structure = 'doublon'
+
+    # s'il y a un as dans la main
+    elif score(jeu)['min'] != score(jeu)['max']:
+        structure = 'AS'
+        score_jeu -= 1
+
+    else:
+        structure = 'normal'
+
+
+    # si la fonction ayant appelé choix_IA est choix_action
+    if 'abandonner' in liste_actions:
+        dico_strategie = strategie_choix_action_IA
+
+    # si la fonction ayant appelé choix_IA est choix_tirer
+    else:
+        dico_strategie = strategie_choix_tirer_IA
+
+    action = dico_strategie[structure][score_jeu][score_croupier]
+
+    # si action == doubler et doubler impossible
+    if action not in liste_actions:
+        action = 'tirer'
+
+    print(joueur, 'choisit de', action)
+
+    return action
+
+
 def choix_action(joueur: str, indice_main: int):
     """
     Permet à joueur de décider de ce qu'il fait (rester, tirer...)
@@ -335,7 +387,11 @@ def choix_action(joueur: str, indice_main: int):
         split = ", 'split'"
         liste_actions.append('split')
 
-    return choix(joueur + ", voulez-vous 'rester', 'tirer'" + doubler + split + " ou 'abandonner'? ", liste_actions)
+    if joueurs[joueur]['intelligence'] == 'humaine':
+        return choix(joueur + ", voulez-vous 'rester', 'tirer'" + doubler + split + " ou 'abandonner' avec votre main " + str(indice_main) + " ?", liste_actions)
+
+    else:
+        return choix_IA(joueur, indice_main, liste_actions)
 
 
 def choix_tirer(joueur: str, indice_main: int):
@@ -350,7 +406,11 @@ def choix_tirer(joueur: str, indice_main: int):
 
         if score(joueurs[joueur]['mains'][indice_main]['jeu'])['min'] <= 21:
             affichage(joueur)
-            action = choix(joueur + ', écrivez "tirer" pour tirer une carte, et "rester" pour rester avec votre main ', ['tirer', 'rester'])
+            if joueurs[joueur]['intelligence'] == 'humaine':
+                action = choix(joueur + ', écrivez "tirer" pour tirer une carte, et "rester" pour rester avec votre main ', ['tirer', 'rester'])
+
+            else:
+                action = choix_IA(joueur, indice_main, ['tirer', 'rester'])
 
         else:
             action = 'rester'
@@ -471,6 +531,12 @@ def eliminations():
             del joueurs[joueur]
 
 
+# Initialisation des IA
+personnages_IA = recuperation_dictionnaire('personnages_IA.json')
+strategie_choix_action_IA = recuperation_dictionnaire('strategie_choix_action_IA.json')
+strategie_choix_tirer_IA = recuperation_dictionnaire('strategie_choix_tirer_IA.json')
+
+
 reprendre_partie = choix('Voulez-vous reprendre la partie précédente? Répondez "oui" ou "non": ', ['oui', 'non'])
 
 if reprendre_partie == 'non':
@@ -480,10 +546,6 @@ if reprendre_partie == 'non':
     nb_joueurs = choix_nb_joueurs()
     joueurs = creation_joueurs()
 
-    # IA = {nom de l'IA: risques pris par l'IA}
-    IA = {'René': 0.1, 'Gisèle': 0.05, 'Elisa': 0.06, 'Juliette': 0.07, 'Eloa': 0.08, 'Maïmouna': 0.08, 'Raphaël': 0.09,
-        'Roman': 0.1, 'Quentin': 0.11, 'Kévin': 0.12, 'Anne': 0.03, 'Félix': 0.14, 'Sylvie': 0.1, 'Antoine': 0.06}
-
     creation_IA()
 
     # Initialisation des richesses (au choix des joueurs), cliquable sur interface
@@ -491,11 +553,12 @@ if reprendre_partie == 'non':
 
 
 else:
-    joueurs = initialisation_par_sauvegarde()
+    joueurs = recuperation_dictionnaire("sauvegarde_partie.json")
 
 
 # Boucle while des manches:
 continuer = 'oui'
+
 while continuer == 'oui':
 
     # Initialisation des mains
@@ -535,7 +598,7 @@ while continuer == 'oui':
                 if joueurs[joueur]['mains'][indice_main]['mise'] == 0:
                     pass
 
-                elif joueurs[joueur]['intelligence'] == 'humaine':
+                else:
                     print('\n', 'Carte croupier:', croupier[0])
                     affichage(joueur)
                     action = choix_action(joueur, indice_main)
@@ -551,9 +614,6 @@ while continuer == 'oui':
 
                     elif action == 'split':
                         split(joueur)
-
-                else:
-                    continue
 
                 indice_main += 1
 
