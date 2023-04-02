@@ -311,7 +311,7 @@ def explosion_joueur(joueur: str, indice_main: int):
     if score(joueurs[joueur]['mains'][indice_main]['jeu'])['min'] > 21:
         print('\n' + joueur + ", vous avez dépassé 21, votre main", indice_main, "perd donc la manche")
         joueurs[joueur]['mains'][0]['mise'] = 0
-        joueurs[joueur]['mains'][indice_main]['jeu'] = [[]]
+        joueurs[joueur]['mains'][indice_main]['jeu'] = []
 
 
 def choix_IA(joueur: str, indice_main: int, liste_actions: list):
@@ -335,8 +335,9 @@ def choix_IA(joueur: str, indice_main: int, liste_actions: list):
     else:
         score_croupier = int(croupier[0]['valeur'])
 
-    if split in liste_actions:
+    if 'split' in liste_actions:
         structure = 'doublon'
+        score_jeu //= 2
 
     # s'il y a un as dans la main
     elif score(jeu)['min'] != score(jeu)['max']:
@@ -361,7 +362,7 @@ def choix_IA(joueur: str, indice_main: int, liste_actions: list):
     if action not in liste_actions:
         action = 'tirer'
 
-    print(joueur, 'choisit de', action)
+    print(joueur, "choisit de", action, "avec sa main", indice_main)
 
     return action
 

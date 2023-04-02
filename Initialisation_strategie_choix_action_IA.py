@@ -12,13 +12,14 @@ La stratégie à adopter dépend de 3 facteurs:
 
     - le score de l'IA
         - score minimal du jeu de l'IA
-        - retirer 1 à ce score si on est dans la cas 'AS'
+        - retirer 1 à ce score si on est en structure 'AS'
+        - diviser le score par 2 si on est en structure 'doublon'
 
     - ls score du croupier (valeur de la carte visible du croupier)
         - 10 si c'est un valet, une dame ou un ace
         - la valeur nominale de la carte sinon (donc ace vaut 1)
 
-        
+
 Pour accéder à l'action à choisir en fonction pour une situation donnée:
 
     action = strategie_choix_action_IA [ structure ] [ score_IA ] [ score_croupier ]
@@ -185,7 +186,7 @@ for i in range(11):
 
 
     elif i <= 5:
-        
+
         for a in range(3):
             L2[i].append(T)
 
@@ -262,7 +263,7 @@ for i in range(22):
 
         for a in range(2):
             L3[i].append(T)
-        
+
         for a in range(4):
             L3[i].append(D)
 
@@ -293,7 +294,7 @@ for i in range(22):
         for a in range(4):
             L3[i].append(T)
 
-    
+
     elif i <= 15:
 
         L3[i].append(I)
