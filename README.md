@@ -11,7 +11,7 @@ REGLES ET DEROULEMENT D’UNE PARTIE </h2>
   
 <div>  
 L’intérêt est ici de coder un jeu de Blackjack. On s’intéresse ici à une version simplifiée du jeu, ne comprenant pas l’existence de mises secondaires (« side bets », existantes dans plusieurs casinos).<br>
-Le jeu se joue avec plusieurs paquets de 52 cartes, constituant ensemble une pioche. Comme on le sait, chaque paquet est divisé en 4 couleurs : pique, cœur, trèfle et carreau, avec 13 cartes par couleur, allant de 1 (l’as) à 10, suivi du valet, de la dame et du roi. <br>
+Le jeu se joue avec 6 paquets de 52 cartes, constituant ensemble une pioche. Comme on le sait, chaque paquet est divisé en 4 couleurs : pique, cœur, trèfle et carreau, avec 13 cartes par couleur, allant de 1 (l’as) à 10, suivi du valet, de la dame et du roi. <br>
 L’objectif de la partie est simple : il faut s’approcher le plus possible de 21 points, sans dépasser. <br>
 Ci-dessous, les valeurs numériques associées aux cartes : <br>
 <ul>
@@ -29,16 +29,23 @@ Le croupier distribue deux cartes à chaque joueur, faces visibles. Il demande a
 <li>Si le joueur a « blackjack », il est dans la situation où il reçoit dès le début du jeu un as et une bûche. Il est alors directement vainqueur du tour. Dans tout autre cas, le joueur reste en jeu. </li>
   <li>Sinon, il peut : </li>
 <ul>
-  <li> « hit » : demander une (ici) carte supplémentaire</li>	
-  <li> "stand" : il s'arrête et conserve ses cartes jusqu'au dépouillement . </li>
-  <li>« double down » : doubler sa mise, mais il ne recevra qu’une seule carte après cela, une troisième carte finale. </li>
-  <li>« surrender » : le joueur abandonne, perd la moitié de sa mise. </li>
+  <li>"tirer" : demander une carte supplémentaire autant de fois qu'il le désire</li>	
+  <li>"rester" : il s'arrête et conserve ses cartes jusqu'au dépouillement . </li>
+  <li>"doubler" : double sa mise, mais il ne recevra qu’une seule carte après cela, une troisième carte finale. </li>
+  <li>"abandonner" : abandonne le tour, perd la moitié de sa mise. </li>
+  <li>
+    "split" : Possible lorsque le joueur a une paire, sépare la main du joueur en deux mains ayant chacune une mise associée égale à de mise initiale, et auxquelles on distribue une carte à chacune. 
+    Si le joueur split sur une paire d'AS il ne peut ensuite plus agir sur ses mains. 
+    Sinon, il joue ensuite avec ses deux mains séparément : pour chacune, il peut tirer, abandonner, rester, doubler ou split de nouveau.
+  </li>
   </ul>
 </ul>
   
  
 Dès qu’un joueur fait plus de 21, on dit qu’il « brûle » (« burst ») et il perd sa mise. <br>
-Quant au croupier, une fois tous les joueurs servis, il joue pour son compte selon une règle universelle : « la banque tire à 16, reste à 17 ». Ainsi, le croupier tire des cartes jusqu'à atteindre un nombre supérieur ou égal à 179 (cf. Service du Croupier)
+Quant au croupier, une fois tous les joueurs servis, il joue pour son compte selon une règle universelle : « la banque tire à 16, reste à 17 ». 
+Ainsi, le croupier tire des cartes jusqu'à atteindre un nombre supérieur ou égal à 17 (cf. Service du Croupier).
+Une fois que le croupier a terminé son tour, les joueurs encore en jeu ayant un score (somme des valeurs nominales de leurs cartes) supérieur à celui du croupier réssupèrent le double de leur mise, tandis que les autres perdent leur mise.
 </div>
  
 
