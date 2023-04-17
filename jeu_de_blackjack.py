@@ -2,6 +2,7 @@
 Ce jeu permet de jouer au Black Jack:
     - seul, en multijoueur ou avec des IA
     - avec des mises
+    - avec le split
 
 le dictionnaire joueurs est de la forme:
 
@@ -28,7 +29,6 @@ nom du deuxième joueur:...
 }
 
 mains contient plusieurs mains car split possible
-
 
 croupier est de la forme: [{'valeur': valeur de la carte, 'couleur': couleur de la carte}, ...]
 """
@@ -103,8 +103,7 @@ def score(jeu: list):
 
 def detect_black_jack(main: list):
     """
-    Vérifie pour tous les joueurs s'ils ont Black Jack,
-    auquel cas ceux-ci réccupèrent 3/2 fois leur mise
+    Renvoie True si la main a black jack, False sinon
     """
     return ((main[0]['valeur'] in ['10', 'J', 'Q', 'K'] and main[1]['valeur'] == '1')
             or (main[1]['valeur'] in ['10', 'J', 'Q', 'K'] and main[0]['valeur'] == '1'))
@@ -143,7 +142,7 @@ def tirer(jeu: list):
 
 
 def affichage(joueur: str):
-    """ affiche clairement la situation de joueur """
+    """ affiche clairement la situation de joueur en attendant l'interface graphique"""
     global joueurs
     print('\n' + joueur + ": ")
     print("richesse", joueurs[joueur]['richesse'])
@@ -174,7 +173,7 @@ def creation_joueurs():
             i = nb_joueurs
 
         elif joueur not in joueurs.keys():
-            joueurs[joueur] = {'intelligence': 'humaine', 'mains': [{'mise': 0, 'jeu':  []}], 'richesse': 0}
+            joueurs[joueur] = {'intelligence': 'humaine'}
             i += 1
 
     return joueurs
@@ -187,7 +186,7 @@ def creation_IA():
     rd.shuffle(liste_IA)
     for nom_IA in liste_IA:
         if not(nom_IA in joueurs.keys()) and len(joueurs) < nb_joueurs:
-            joueurs[nom_IA] = {'intelligence': 'artificielle', 'mains': [[]], 'richesse': 0, 'mise': 0}
+            joueurs[nom_IA] = {'intelligence': 'artificielle'}
 
 
 def initialisation_richesses():
@@ -199,7 +198,7 @@ def initialisation_richesses():
 
 
 def initialisation_mains():
-    """ associe une main vide à chaque joueur """
+    """ associe une main vide à chaque joueur et une liste vide au croupier"""
     global croupier, joueurs
     croupier = []
     for joueur in joueurs.keys():
@@ -223,7 +222,7 @@ def mise_artificielle(joueur: str):
     """
     Fait miser l'intelligence artificielle correspondant au joueur
     (différentes prises de risque en fonction des IA)
-    Ici version bêta à faire évoluer pour moins de répétition
+    composante aléatoire dans la mise pour donner une illusion d'humanité
     """
     global joueurs, IA
     mise = int(rd.uniform(0.5, 1.5) * personnages_IA[joueur] * joueurs[joueur]['richesse']) + 5
@@ -232,7 +231,7 @@ def mise_artificielle(joueur: str):
 
 
 def mise_joueur(joueur: str):
-    """ Fait choisir une mise au joueur jusqu'à ce que celle-ci soit inférieure à sa richesse """
+    """ Fait choisir au joueur une mise compatible avec sa richesse """
     global joueurs
     valeur = entree_valeur(joueur + ", que voulez-vous miser? (votre richesse: " + str(joueurs[joueur]['richesse']) + ") ")
     while valeur > joueurs[joueur]['richesse']:
@@ -263,13 +262,13 @@ def black_jack():
     - les deux à la fois
 
     L'arrondi pour congruence à 5 de la division d'une mise
-    (lorsqu'un joueur remporte 3/2 de sa mise avantage le le joueur
+    lorsqu'un joueur remporte 3/2 de sa mise avantage le le joueur
     """
     global joueurs, croupier
     if detect_black_jack(croupier):
         print('\n', "le croupier a réalisé un black jack:", croupier)
 
-        for joueur in joueurs:
+        for joueur in list(joueurs):
 
             if detect_black_jack(joueurs[joueur]['mains'][0]['jeu']):
                 joueurs[joueur]['richesse'] += joueurs[joueur]['mains'][0]['mise']
@@ -287,10 +286,10 @@ def black_jack():
 
     else:
         # la variable nb_black_jack sert à détecter le cas où tous les joueurs ont black jack
-        for joueur in joueurs:
+        for joueur in list(joueurs):
             if detect_black_jack(joueurs[joueur]['mains'][0]['jeu']):
                 print('\n', "contrairement au croupier,", joueur, "a réalisé un black jack (", joueurs[joueur]['mains'][0]['jeu'],
-                      ") il réccupère donc 3/2 de sa mise soit", (3*joueurs[joueur]['mains'][0]['mise'] + joueurs[joueur]['mains'][0]['mise'] % 10) // 2)
+                      ")", joueur, "réccupère donc 3/2 de sa mise soit", (3*joueurs[joueur]['mains'][0]['mise'] + joueurs[joueur]['mains'][0]['mise'] % 10) // 2)
 
                 joueurs[joueur]['richesse'] += (3*joueurs[joueur]['mains'][0]['mise'] + joueurs[joueur]['mains'][0]['mise'] % 10) // 2
                 joueurs[joueur]['mains'][0]['mise'] = 0
@@ -303,8 +302,6 @@ def black_jack():
 def explosion_joueur(joueur: str, indice_main: int):
     """
     Met à 0 la mise et la main du joueur s'il dépasse 21
-    Par ailleurs, une mise de 0 permettra par la suite
-    de savoir si un joueur est encore actif dans le tour.
     """
     global joueurs
     affichage(joueur)
@@ -316,11 +313,11 @@ def explosion_joueur(joueur: str, indice_main: int):
 
 def choix_IA(joueur: str, indice_main: int, liste_actions: list):
     """
-    Si fonction == choix_action
+    Si 'abandonner' in liste_actions (<=> on est dans choix_action)
         retourne le meilleur choix d'action possible en se référant à la stratégie
         de base qui est contenue dans le dictionnaire strategie_choix_action_IA si
 
-    Si fonction == choix_tirer
+    Si 'abandonner' not in liste_actions (<=> on est dans choix_tirer)
         retourne le meilleur choix d'action possible en se référant à la stratégie
         contenue dans le dictionnaire strategie_choix_tirer_IA
     """
@@ -373,7 +370,7 @@ def choix_action(joueur: str, indice_main: int):
     contrairement à choix(joueur: str, txt: str), prend en compte que certains
     choix ne peuvent être faits que sous conditions:
         - doubler: richesse suffisante
-        - split: cartes de la main similaires
+        - split: cartes de la main similaires et richesse suffisante
     """
     global joueurs
     liste_actions = ['rester', 'tirer', 'abandonner']
@@ -384,9 +381,9 @@ def choix_action(joueur: str, indice_main: int):
         doubler = ", 'doubler"
         liste_actions.append('doubler')
 
-    if joueurs[joueur]['mains'][indice_main]['jeu'][0]['valeur'] == joueurs[joueur]['mains'][indice_main]['jeu'][1]['valeur']:
-        split = ", 'split'"
-        liste_actions.append('split')
+        if joueurs[joueur]['mains'][indice_main]['jeu'][0]['valeur'] == joueurs[joueur]['mains'][indice_main]['jeu'][1]['valeur']:
+            split = ", 'split'"
+            liste_actions.append('split')
 
     if joueurs[joueur]['intelligence'] == 'humaine':
         return choix(joueur + ", voulez-vous 'rester', 'tirer'" + doubler + split + " ou 'abandonner' avec votre main " + str(indice_main) + " ?", liste_actions)
@@ -421,7 +418,7 @@ def choix_tirer(joueur: str, indice_main: int):
 
 def abandonner(joueur: str, indice_main: int):
     """
-    Le joueur réccupère perd sa main et la mise qui lui était associée
+    Le joueur perd sa main et la mise qui lui était associée
     L'arrondi pour congruence à 5 de la division de la mise avantage le croupier
     pour empêcher qu'un joueur misant 5 ne puisse garder l'intégralité de sa mise
     """
@@ -437,9 +434,11 @@ def abandonner(joueur: str, indice_main: int):
 def split(joueur: str):
     """
     sépare la main du joueur en deux mains et distribue une carte par main.
-    Diminue de 1 le prochain indice de main de la prochaine action (pour que la main
-    repasse dans la boucle du tour du joueur)si la paire n'est pas d'AS, et
-    l'augmente d'un sinon (pour la raison inverse)
+    Diminue de 1 le prochain indice de main de la prochaine action
+    (pour que main[indice_main] repasse dans la boucle du tour du joueur
+    si la paire n'est pas d'AS), et l'augmente d'un sinon
+    (pour que main[indice_main] et main[indice_main] ne repassent/passent
+    pas dans la boucle du tour du joueur si la paire est d'AS)
     """
     global joueurs, indice_main
 
@@ -475,7 +474,7 @@ def tour_croupier():
     """Fait tirer le croupier jusqu'à ce qu'il etteigne 17"""
     global sabot, croupier, joueurs
     print('\n', "Cartes du croupier:", croupier)
-    while score(croupier)['min'] < 17:
+    while score(croupier)['max'] < 17:
         croupier.append(sabot[-1])
         del sabot[-1]
         print('\n', "Cartes du croupier:", croupier)
@@ -492,7 +491,15 @@ def tour_croupier():
 
 
 def resultats():
-    """compare les résultats du joueur à ceux du croupier puis répartie les mises"""
+    """compare les résultats des joueurs à ceux du croupier puis répartit les mises
+
+            Si main_croupier > main_joueur:
+                Croupier réccupère la mise du joueur
+
+            Sinon:
+                le joueur réccupère 2 fois sa mise
+
+    """
     global joueurs, croupier
     for joueur in joueurs.keys():
         for indice_main in range(len(joueurs[joueur]['mains'])):
@@ -549,13 +556,15 @@ if reprendre_partie == 'non':
 
     creation_IA()
 
-    # Initialisation des richesses (au choix des joueurs), cliquable sur interface
+    # Initialisation des richesses (au choix des joueurs)
     initialisation_richesses()
 
 
 else:
     joueurs = recuperation_dictionnaire("sauvegarde_partie.json")
 
+# Initialisation du sabot
+sabot = creation_sabot()
 
 # Boucle while des manches:
 continuer = 'oui'
@@ -563,14 +572,16 @@ continuer = 'oui'
 while continuer == 'oui':
 
     # Initialisation des mains
-    # pourrait être intégré à distribution() mais placé ici pour faciliter interface
     initialisation_mains()
 
     # sauvegarde, faite ici et non uniquement après la boucle pour sauvegarder en cas de bug
     sauvegarde()
 
-    # Initialisation du sabot (p, c, k, t = pique, coeur, carreau, trefle)
-    sabot = creation_sabot()
+    # Initialisation du sabot s'il ne reste plus assez de cartes dedans
+    # Le sabot n'est pas réinitialisé à chaque fois car cela est interdit aux
+    # casinos pour permettre aux joueurs de compter les cartes
+    if len(sabot) < 200:
+        sabot = creation_sabot()
 
     # Première mise des joueurs
     mise()
@@ -589,8 +600,8 @@ while continuer == 'oui':
             # Si ni le croupier, ni le joueur n'a fait Black Jack, le joueur, pour chacun de ses jeux, fait un seul choix:
                 # Tirer
                 # Abandonner
-                # Doubler
-                # split (uniquement possible si le joueur possède une paire)
+                # Doubler (uniquement possible si richesse >= mise)
+                # split (uniquement possible si le joueur possède une paire et richesse >= mise)
                 # Rester (pas de fonction associée au bouton car rien à faire)
 
             indice_main = 0
@@ -624,14 +635,7 @@ while continuer == 'oui':
             # Le croupier tire ses cartes et perd s'il a plus de 21
             tour_croupier()
 
-            # Boucle des résultats (une itération par joueur restant):
-
-                # Si main_croupier > main_joueur:
-                    # Croupier réccupère la mise du joueur
-
-                # Sinon:
-                    # le joueur réccupère 2 fois sa mise
-
+            # Boucle des résultats:
             resultats()
 
     # les joueurs à richesse nulle sont éliminés de la partie
