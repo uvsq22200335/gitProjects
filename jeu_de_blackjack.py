@@ -418,7 +418,7 @@ def choix_tirer(joueur: str, indice_main: int):
 
 def abandonner(joueur: str, indice_main: int):
     """
-    Le joueur perd sa main et la mise qui lui était associée
+    Le joueur perd sa main et récupère la moitié de la mise qui lui était associée
     L'arrondi pour congruence à 5 de la division de la mise avantage le croupier
     pour empêcher qu'un joueur misant 5 ne puisse garder l'intégralité de sa mise
     """
@@ -491,7 +491,7 @@ def tour_croupier():
 
 
 def resultats():
-    """compare les résultats des joueurs à ceux du croupier puis répartit les mises
+    """compare les résultats des joueurs à ceux du croupier puis répartit les gains
 
             Si main_croupier > main_joueur:
                 Croupier réccupère la mise du joueur
