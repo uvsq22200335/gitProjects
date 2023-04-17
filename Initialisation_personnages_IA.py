@@ -1,7 +1,7 @@
 """
 Ce programme enregistre dans personnages_IA.json la stratégie suivi par une IA si celle-ci a
 choisi de tirer car on ne sait pas coder de json.
-Maintenant personnages_IA.json.json rempli, ce programme ne sert à rien mais est conservé au cas où
+Une fois personnages_IA.json.json créé, ce programme ne sert à rien mais est conservé au cas où
 personnages_IA.json.json devait être altéré, auquel cas lancer ce programme permettrait de le re-générer.
 """
 import json as js

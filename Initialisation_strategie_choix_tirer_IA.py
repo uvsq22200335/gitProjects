@@ -1,7 +1,7 @@
 """
 Ce programme enregistre dans strategie_choix_tirer_IA.json la stratégie suivi par une IA si celle-ci a
 choisi de tirer car on ne sait pas coder de json.
-Maintenant strategie_choix_tirer_IA.json rempli, ce programme ne sert à rien mais est conservé au cas où
+Une fois strategie_choix_tirer_IA.json créé, ce programme ne sert à rien mais est conservé au cas où
 strategie_choix_tirer_IA.json devait être altéré, auquel cas lancer ce programme permettrait de le re-générer.
 
 La stratégie à adopter dépend de 3 facteurs:

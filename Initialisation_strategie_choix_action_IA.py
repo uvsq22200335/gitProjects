@@ -1,6 +1,6 @@
 """
 Ce programme enregistre dans strategie_choix_action_IA.json la stratégie de base car on ne sait pas coder de json.
-Maintenant strategie_choix_action_IA.json rempli, ce programme ne sert à rien mais est conservé au cas où
+Une fois strategie_choix_action_IA.json créé, ce programme ne sert à rien mais est conservé au cas où
 strategie_choix_action_IA.json devait être altéré, auquel cas lancer ce programme permettrait de le re-générer.
 
 La stratégie à adopter dépend de 3 facteurs:
