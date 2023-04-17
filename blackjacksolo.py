@@ -57,7 +57,7 @@ def stand():
 			# croupier gagne
 			messagebox.showinfo("Le croupier gagne!!", f"Le croupier gagne!  croupier: {croupier_total}  joueur: {joueur_total}")
 		else:
-			# joueur Wins!
+			# Le joueur gagne!
 			messagebox.showinfo("Le joueur gagne!!", f"Le joueur gagne!  croupier: {croupier_total}  joueur: {joueur_total}")
 	else:
 		# continue d'ajouter une carte au croupier 
@@ -151,14 +151,14 @@ def blackjack_shuffle(joueur):
 		
 		# verification victoire du croupier
 		elif statut_blackjack["croupier"] == "yes":
-			messagebox.showinfo("croupier Wins!", "21! croupier Wins!")
+			messagebox.showinfo("Le croupier gagne!", "21! Le croupier gagne!")
 			# désactiver les boutons 
 			bouton_carte.config(state="disabled")
 			bouton_stand.config(state="disabled")
 
 		# Check For joueur Win
 		elif statut_blackjack["joueur"] == "yes":
-			messagebox.showinfo("joueur Wins!", "21! joueur Wins!")
+			messagebox.showinfo("Le joueur gagne!", "21! Le joueur gagne!")
 			# désactiver les boutons 
 			bouton_carte.config(state="disabled")
 			bouton_stand.config(state="disabled")
@@ -275,35 +275,35 @@ def croupier_hit():
 
             if spot_croupier == 0:
                 # redimmensionner la carte
-                croupier_image1 = redim_cartes(f'images/cards/{carte_croupier}.png')
+                croupier_image1 = redim_cartes(f'images/{carte_croupier}.png')
                 # afficher la carte à l'écran
                 croupier_label_1.config(image=croupier_image1)
                 # ajouter 1 au compteur de notre joueur
                 spot_croupier += 1
             elif spot_croupier == 1:
                 # redimmensionner la carte
-                croupier_image2 = redim_cartes(f'images/cards/{carte_croupier}.png')
+                croupier_image2 = redim_cartes(f'images/{carte_croupier}.png')
                 # afficher la carte à l'écran
                 croupier_label_2.config(image=croupier_image2)
                 # ajouter 1 au compteur de notre joueur
                 spot_croupier += 1
             elif spot_croupier == 2:
                 # redimmensionner la carte
-                croupier_image3 = redim_cartes(f'images/cards/{carte_croupier}.png')
+                croupier_image3 = redim_cartes(f'images/{carte_croupier}.png')
                 # afficher la carte à l'écran
                 croupier_label_3.config(image=croupier_image3)
                 # ajouter 1 au compteur de notre joueur
                 spot_croupier += 1
             elif spot_croupier == 3:
                 # redimmensionner la carte
-                croupier_image4 = redim_cartes(f'images/cards/{carte_croupier}.png')
+                croupier_image4 = redim_cartes(f'images/{carte_croupier}.png')
                 # afficher la carte à l'écran
                 croupier_label_4.config(image=croupier_image4)
                 # ajouter 1 au compteur de notre joueur
                 spot_croupier += 1
             elif spot_croupier == 4:
                 # redimmensionner la carte
-                croupier_image5 = redim_cartes(f'images/cards/{carte_croupier}.png')
+                croupier_image5 = redim_cartes(f'images/{carte_croupier}.png')
                 # afficher la carte à l'écran
                 croupier_label_5.config(image=croupier_image5)
                 # ajouter 1 au compteur de notre joueur
@@ -329,7 +329,7 @@ def croupier_hit():
                 bouton_stand.config(state="disabled")
 
                 #faire apparaitre le message box
-                messagebox.showinfo("croupier Wins!!", f"croupier Wins! croupier:{croupier_total}   joueur: {joueur_total}")
+                messagebox.showinfo("Le croupier gagne!!", f"Le croupier gagne! croupier:{croupier_total}   joueur: {joueur_total}")
 
             #indiquer le nombre de cartes restantes dans la bar d'évolution
             root.title(f'il reste {len(deck)} cartes')
@@ -353,35 +353,35 @@ def joueur_hit():
 
             if spot_joueur == 0:
                 # redimmensionner la carte
-                joueur_image1 = redim_cartes(f'images/cards/{carte_joueur}.png')
+                joueur_image1 = redim_cartes(f'images/{carte_joueur}.png')
                 # afficher la carte à l'écran
                 joueur_label_1.config(image=joueur_image1)
                 #ajouter 1 au compteur de notre joueur
                 spot_joueur += 1
             elif spot_joueur == 1:
                 # redimmensionner la carte
-                joueur_image2 = redim_cartes(f'images/cards/{carte_joueur}.png')
+                joueur_image2 = redim_cartes(f'images/{carte_joueur}.png')
                 # afficher la carte à l'écran
                 joueur_label_2.config(image=joueur_image2)
                 #ajouter 1 au compteur de notre joueur
                 spot_joueur += 1
             elif spot_joueur == 2:
                 # redimmensionner la carte
-                joueur_image3 = redim_cartes(f'images/cards/{carte_joueur}.png')
+                joueur_image3 = redim_cartes(f'images/{carte_joueur}.png')
                 # afficher la carte à l'écran
                 joueur_label_3.config(image=joueur_image3)
                 #ajouter 1 au compteur de notre joueur
                 spot_joueur += 1
             elif spot_joueur == 3:
                 # redimmensionner la carte
-                joueur_image4 = redim_cartes(f'images/cards/{carte_joueur}.png')
+                joueur_image4 = redim_cartes(f'images/{carte_joueur}.png')
                 # afficher la carte à l'écran
                 joueur_label_4.config(image=joueur_image4)
                 #ajouter 1 au compteur de notre joueur
                 spot_joueur += 1
             elif spot_joueur == 4:
                 # redimmensionner la carte
-                joueur_image5 = redim_cartes(f'images/cards/{carte_joueur}.png')
+                joueur_image5 = redim_cartes(f'images/{carte_joueur}.png')
                 # afficher la carte à l'écran
                 joueur_label_5.config(image=joueur_image5)
                 #ajouter 1 au compteur de notre joueur
@@ -405,7 +405,7 @@ def distribuer_cartes():
         croupier.append(card)
         # affichage
         global croupier_image
-        croupier_image = redim_cartes(f'images/cards/{card}.png')
+        croupier_image = redim_cartes(f'images/{card}.png')
 	
         croupier_label.config(image=croupier_image)
         #croupier_label.config(text=carte)
@@ -418,7 +418,7 @@ def distribuer_cartes():
         joueur.append(card)
         # affichage
         global joueur_image
-        joueur_image = redim_cartes(f'images/cards/{card}.png')
+        joueur_image = redim_cartes(f'images/{card}.png')
 	
         joueur_label.config(image=joueur_image)
         #joueur_label.config(text=card)
